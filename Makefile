@@ -1,15 +1,18 @@
 NAME = dice
-SRC = main.cpp
-HEADERS = Die.hpp Hero.hpp
+SRC = main.cpp Game.cpp Die.cpp Display.cpp Input.cpp
+OBJ = $(SRC:.cpp=.o)
 FLAGS = -Wall -Wextra -Werror
 
 all: $(NAME)
 
-$(NAME): $(SRC) $(HEADERS)
-		g++ $(FLAGS) -o $(NAME) $(SRC) $(HEADERS)
+$(NAME): $(OBJ)
+	g++ $(FLAGS) -o $(NAME) $(OBJ)
+
+%.o: %.cpp
+	g++ $(FLAGS) -c $< -o $@
 
 clean:
-		rm -f $(NAME)
+	rm -f $(NAME) $(OBJ)
 
 re: clean all
 

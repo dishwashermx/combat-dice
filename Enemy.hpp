@@ -12,12 +12,12 @@ public:
 private:
     std::vector<DiceFace> createEnemyDie() {
         std::vector<DiceFace> faces;
-        faces.push_back(DiceFace(DAMAGE, ENEMY, 3));
-        faces.push_back(DiceFace(DAMAGE, ENEMY, 2));
-        faces.push_back(DiceFace(DAMAGE, ENEMY, 1));
-        faces.push_back(DiceFace(DAMAGE, ENEMY, 1));
+        faces.push_back(DiceFace(ATTACK, ENEMY, 3));
+        faces.push_back(DiceFace(ATTACK, ENEMY, 2));
+        faces.push_back(DiceFace(ATTACK, ENEMY, 1));
+        faces.push_back(DiceFace(ATTACK, ENEMY, 1));
         faces.push_back(DiceFace(EMPTY, ENEMY, 1));
-        faces.push_back(DiceFace(EMPTY, ENEMY, 0));
+        faces.push_back(DiceFace(EMPTY, ENEMY, 1));
         return faces;
     }
 };

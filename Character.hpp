@@ -6,6 +6,25 @@
 # include <iostream>
 # include "Die.hpp"
 
+struct ActionResult {
+    // Damage-specific
+    int damageBlocked;
+    int damageDealt;
+
+    // Healing-specific
+    int healingAttempted;
+    int healingApplied;
+
+    // Shield-specific
+    int shieldAdded;
+
+    // General state
+    int newHealth;
+    int newShield;
+    int oldHealth;
+    int oldShield;
+};
+
 class Character {
 protected:
 		std::string name;
@@ -25,36 +44,55 @@ public:
 
 		DiceFace roll() {
 			DiceFace result = die.rollFace();
-			std::cout << name << " rolls a " << result.value << " (" << actionToString(result.action) << ")!" << std::endl;
 			return result;
 		}
 
-		void takeDamage(int damage) {
+		ActionResult takeDamage(int damage) {
 			int actualDamage = damage;
-				if (shield > 0) {
-						int blocked = std::min(shield, actualDamage);
-						shield = shield - blocked;
-						actualDamage = actualDamage - blocked;
-						std::cout << blocked << " damage was blocked. Shield now " << shield << std::endl;
-					}
-					if (actualDamage > 0) {
-						health = health - actualDamage;
-						if (health < 0)
-						health = 0;
-						std::cout << name << " takes " << actualDamage << " damage, health now " << health << std::endl;
-				}
+			ActionResult result = {0, 0, 0, 0, 0, health, shield, health, shield};
+
+			if (shield > 0) {
+				int blocked = std::min(shield, actualDamage);
+				result.newShield -= blocked;
+				actualDamage -= blocked;
+				result.damageBlocked = blocked;
+			}
+			if (actualDamage > 0) {
+				health -= actualDamage;
+				if (health < 0)
+					health = 0;
+				result.damageDealt = actualDamage;
+				result.newHealth = health;
+			}
+			return result;
 		}
 
-		void heal(int amount) {
-				if (health + amount > max_health)
-						amount = max_health - health;
-				health += amount;
-				std::cout << name << " heals " << amount << ", health now " << health << std::endl;
+		ActionResult heal(int amount) {
+			int appliedHealing = amount;
+			ActionResult result = {0, 0, 0, 0, 0, health, shield, health, shield};
+
+			if (health == max_health) {
+				appliedHealing = 0; // No healing needed
+			} else if (health + amount > max_health) {
+				appliedHealing = max_health - health; // Heal to full health
+			}
+
+			health += appliedHealing;
+			result.healingAttempted = amount;
+			result.healingApplied = appliedHealing;
+			result.newHealth = health;
+
+			return result;
 		}
 
-		void addShield(int amount) {
-				shield += amount;
-				std::cout << name << " gains " << amount << " shield, total shield now " << shield << std::endl;
+		ActionResult addShield(int amount) {
+			ActionResult result = {0, 0, 0, 0, 0, health, shield, health, shield};
+
+			shield += amount;
+			result.shieldAdded = amount;
+			result.newShield = shield;
+
+			return result;
 		}
 
 		void resetShield() {
@@ -75,6 +113,10 @@ public:
 
 		int getMaxHealth() const {
 				return max_health;
+		}
+
+		int getShield() const {
+				return shield;
 		}
 
 		void displayDie() const {
