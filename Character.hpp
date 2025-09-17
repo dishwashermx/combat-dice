@@ -30,15 +30,16 @@ protected:
 		std::string name;
 		int max_health;
 		int health;
+		int incoming_damage;
 		int shield;
 		Die die;
 
 public:
 		Character(const std::string& char_name, int char_health)
-		: name(char_name), max_health(char_health), health(char_health), shield(0), die() {}
+		: name(char_name), max_health(char_health), health(char_health), incoming_damage(0), shield(0), die() {}
 
 		Character(const std::string& char_name, int char_health, const std::vector<DiceFace>& customFaces)
-		: name(char_name), max_health(char_health), health(char_health), shield(0), die(customFaces) {}
+		: name(char_name), max_health(char_health), health(char_health), incoming_damage(0), shield(0), die(customFaces) {}
 
 		virtual ~Character() {}	// Virtual destructor for proper inheritance
 
@@ -113,6 +114,15 @@ public:
 
 		int getMaxHealth() const {
 				return max_health;
+		}
+
+		int getIncomingDamage() const {
+				return incoming_damage;
+		}
+
+		int setIncomingDamage(int damage) {
+				incoming_damage = damage;
+				return incoming_damage;
 		}
 
 		int getShield() const {

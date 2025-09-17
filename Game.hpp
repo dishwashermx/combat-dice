@@ -56,7 +56,4 @@ class Game {
 		void resolveTurn(const std::vector<CombatAction>& enemyActions);
 };
 
-
-int getPlayerChoice(int min, int max);
-
 #endif

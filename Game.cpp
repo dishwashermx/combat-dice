@@ -55,12 +55,18 @@ void Game::playRound() {
 	Display::showRoundHeader(round);
 	for (auto& hero : heroes) {
 			hero.resetShield(); // Reset shields at the start of each round
-			Display::showHeroStatus(hero.getName(), hero.getHealth(), hero.getMaxHealth(), hero.getShield());
+			hero.setIncomingDamage(0); // Reset incoming damage
+			Display::showStatus(hero);
+			std::cout << std::endl;
 			hero.displayDie();
+			std::cout << std::endl << std::endl;
 	}
-	for (const auto& enemy : enemies) {
+	for (auto& enemy : enemies) {
 		if (enemy.isAlive()) {
-			Display::showEnemyStatus(enemy.getName(), enemy.getHealth(), enemy.getMaxHealth(), enemy.getShield());
+			enemy.resetShield(); // Reset shields at the start of each round
+			enemy.setIncomingDamage(0); // Reset incoming damage
+			Display::showStatus(enemy);
+			std::cout << std::endl;
 		}
 	}
 	std::cout << std::endl;
@@ -97,6 +103,36 @@ void Game::executeAction(CombatAction action) {
 		return;
 }
 
+std::vector<CombatAction> Game::enemyPhase() {
+	std::vector<CombatAction> actions;
+
+	for (size_t i = 0; i < enemies.size(); ++i) {
+		if (enemies[i].isAlive()) {
+			DiceFace roll = enemies[i].roll();
+
+			int targetIndex = -1;
+			std::vector<int> aliveHeroes;
+			for (size_t i = 0; i < heroes.size(); ++i) {
+				if (heroes[i].isAlive()) {
+					aliveHeroes.push_back(i);
+				}
+			}
+			targetIndex = aliveHeroes[generator() % aliveHeroes.size()];
+			heroes[targetIndex].setIncomingDamage(heroes[targetIndex].getIncomingDamage() + (roll.action == ATTACK ? roll.value : 0));
+
+			CombatAction action(roll, i, 0, targetIndex, enemies[i].getName(), heroes[targetIndex].getName());
+
+			Display::showIntent(action);
+
+			actions.push_back(action);
+		}
+		else {
+			actions.push_back(CombatAction(DiceFace(EMPTY, NONE, 0), i, 1, 0, enemies[i].getName(), "")); // No action for dead enemies
+		}
+	}
+	return actions;
+}
+
 void Game::heroPhase() {
 		for (size_t i = 0; i < heroes.size(); ++i) {
 				if (heroes[i].isAlive() && anyEnemiesAlive()) {
@@ -123,24 +159,12 @@ void Game::heroPhase() {
 								}
 								std::cout << std::endl;
 						}
-						std::vector<std::string> enemyNames;
-						for (const auto& enemy : enemies) {
-								if (enemy.isAlive()) {
-										enemyNames.push_back(enemy.getName());
-								}
-						}
-						std::vector<std::string> heroNames;
-						for (const auto& hero : heroes) {
-								if (hero.isAlive()) {
-										heroNames.push_back(hero.getName());
-								}
-						}
 						if (roll.target == ENEMY) {
-								int targetChoice = Input::getTargetChoice(enemyNames);
+								int targetChoice = Input::getTargetChoice(enemies);
 								CombatAction action(roll, i, 1, targetChoice, heroes[i].getName(), enemies[targetChoice].getName());
 								executeAction(action);
 						} else if (roll.target == ALLY) {
-								int targetChoice = Input::getTargetChoice(heroNames);
+								int targetChoice = Input::getTargetChoice(heroes);
 								CombatAction action(roll, i, 0, targetChoice, heroes[i].getName(), heroes[targetChoice].getName());
 								executeAction(action);
 						} else { // NONE target
@@ -152,39 +176,10 @@ void Game::heroPhase() {
 		return;
 }
 
-std::vector<CombatAction> Game::enemyPhase() {
-	std::vector<CombatAction> actions;
-
-	for (size_t i = 0; i < enemies.size(); ++i) {
-		if (enemies[i].isAlive()) {
-			DiceFace roll = enemies[i].roll();
-
-			int targetIndex = -1;
-			std::vector<int> aliveHeroes;
-			for (size_t i = 0; i < heroes.size(); ++i) {
-				if (heroes[i].isAlive()) {
-					aliveHeroes.push_back(i);
-				}
-			}
-			targetIndex = aliveHeroes[generator() % aliveHeroes.size()];
-
-			CombatAction action(roll, i, 0, targetIndex, enemies[i].getName(), heroes[targetIndex].getName());
-
-			Display::showIntent(action);
-
-			actions.push_back(action);
-		}
-		else {
-			actions.push_back(CombatAction(DiceFace(EMPTY, NONE, 0), i, 1, 0, enemies[i].getName(), "")); // No action for dead enemies
-		}
-	}
-	return actions;
-}
-
 void Game::resolveTurn(const std::vector<CombatAction>& enemyActions) {
     // Enemies act
     for (const auto& action : enemyActions) {
-        // Bounds checking for safety
+			// Bounds checking for safety
         if (action.actorIndex < 0 || static_cast<size_t>(action.actorIndex) >= enemies.size()) continue;
         if (!enemies[action.actorIndex].isAlive()) continue;
 

@@ -16,7 +16,7 @@ private:
         faces.push_back(DiceFace(ATTACK, ENEMY, 2));
         faces.push_back(DiceFace(ATTACK, ENEMY, 1));
         faces.push_back(DiceFace(ATTACK, ENEMY, 1));
-        faces.push_back(DiceFace(EMPTY, ENEMY, 1));
+        faces.push_back(DiceFace(ATTACK, ENEMY, 1));
         faces.push_back(DiceFace(EMPTY, ENEMY, 1));
         return faces;
     }

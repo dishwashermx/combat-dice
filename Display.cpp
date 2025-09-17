@@ -6,36 +6,6 @@ void Display::showRoundHeader(int round) {
 						<< Colors::RESET << std::endl;
 }
 
-void Display::showHeroStatus(const std::string& name, int health, int maxHealth, int shield) {
-	std::cout << Colors::GREEN << name << Colors::RESET << ": ";
-
-	// Health with color coding
-	if (health <= maxHealth * 0.3) {
-			std::cout << Colors::RED;
-	} else if (health <= maxHealth * 0.6) {
-			std::cout << Colors::YELLOW;
-	} else {
-			std::cout << Colors::GREEN;
-	}
-
-	std::cout << health << "/" << maxHealth << " HP" << Colors::RESET;
-
-	if (shield > 0) {
-		std::cout << Colors::BLUE << " [Shield: " << shield << "]" << Colors::RESET;
-	}
-	std::cout << std::endl;
-}
-
-void Display::showEnemyStatus(const std::string& name, int health, int maxHealth, int shield) {
-	std::cout << Colors::RED << name << Colors::RESET << ": ";
-	std::cout << health << "/" << maxHealth << " HP";
-
-	if (shield > 0) {
-			std::cout << Colors::BLUE << " [Shield: " << shield << "]" << Colors::RESET;
-	}
-	std::cout << std::endl;
-}
-
 void Display::showIntent(const CombatAction& action) {
     std::cout << Colors::RED << action.actorName << Colors::RESET << " intends to ";
 

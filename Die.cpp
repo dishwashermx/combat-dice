@@ -63,5 +63,4 @@ void Die::displayFaces() const {
 					std::cout << " ";
 			}
 	}
-	std::cout << std::endl;
 }
