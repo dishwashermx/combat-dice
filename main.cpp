@@ -58,8 +58,8 @@ int main(void) {
 	Game game;
 
 	// Setup heroes
-	game.addHero("Aragorn", 10);
-	game.addHero("Legolas", 15);
+	game.addHero("Aragorn", 6);
+	game.addHero("Legolas", 4);
 
 	// Setup enemies
 	game.addEnemy("Orc", 3);

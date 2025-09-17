@@ -44,7 +44,7 @@ void Display::showActionResult(const CombatAction& action, const ActionResult& r
 		return ;
 	}
 	std::cout << Colors::GREEN << action.actorName << Colors::RESET << " "
-	<< Colors::BOLD << actionToString(action.roll.action) << "s" << Colors::RESET;
+	<< Colors::BOLD << actionToString(action.roll.action) << "s " << Colors::RESET;
 
 	if (!action.targetName.empty() && action.targetName != action.actorName) {
 		std::cout << Colors::RED << action.targetName << Colors::RESET;
