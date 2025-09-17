@@ -1,8 +1,4 @@
 #include "Game.hpp"
-#include "Display.hpp"
-#include <cstdlib>
-#include "Input.hpp"
-#include "Die.hpp"
 
 Game::Game() : round(1) {}
 
@@ -59,8 +55,9 @@ void Game::playRound() {
 			Display::showStatus(hero);
 			std::cout << std::endl;
 			hero.displayDie();
-			std::cout << std::endl << std::endl;
+			std::cout << std::endl;
 	}
+	std::cout << std::endl;
 	for (auto& enemy : enemies) {
 		if (enemy.isAlive()) {
 			enemy.resetShield(); // Reset shields at the start of each round
@@ -71,6 +68,8 @@ void Game::playRound() {
 	}
 	std::cout << std::endl;
 
+	Input::pressEnterToContinue();
+
 	std::vector<CombatAction> enemyRolls = enemyPhase();  // All enemies roll
 	heroPhase();    // All heroes roll/reroll and execute
 
@@ -80,17 +79,20 @@ void Game::playRound() {
 }
 
 void Game::executeAction(CombatAction action) {
-		if (action.targetTeam == 1) { // Target is an enemy
-				if (action.targetIndex >= 0 && static_cast<size_t>(action.targetIndex) < enemies.size() &&
-						enemies[action.targetIndex].isAlive()) {
+		if (action.roll.action == EMPTY) {
+				ActionResult result = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+				Display::showActionResult(action, result);
+				return;
+		}
+		else if (action.targetTeam == 1) { // Target is an enemy
+				if (action.targetIndex >= 0 && static_cast<size_t>(action.targetIndex) < enemies.size()) {
 						if (action.roll.action == ATTACK) {
 								ActionResult result = enemies[action.targetIndex].takeDamage(action.roll.value);
 								Display::showActionResult(action, result);
 						}
 				}
 		} else if (action.targetTeam == 0) { // Target is a hero
-				if (action.targetIndex >= 0 && static_cast<size_t>(action.targetIndex) < heroes.size() &&
-						heroes[action.targetIndex].isAlive()) {
+				if (action.targetIndex >= 0 && static_cast<size_t>(action.targetIndex) < heroes.size()) {
 						if (action.roll.action == HEAL) {
 								ActionResult result = heroes[action.targetIndex].heal(action.roll.value);
 								Display::showActionResult(action, result);
@@ -98,6 +100,15 @@ void Game::executeAction(CombatAction action) {
 								ActionResult result = heroes[action.targetIndex].addShield(action.roll.value);
 								Display::showActionResult(action, result);
 						}
+				}
+		}
+
+		for (auto& enemy : enemies) {
+				if (!enemy.isAlive() && enemy.getRoundOfDeath() != -1) {
+						enemy.setRoundOfDeath(round); // Mark the round of death
+				}
+				if (enemy.getRoundOfDeath() == round) {
+						recalculateIncomingDamage();
 				}
 		}
 		return;
@@ -120,16 +131,18 @@ std::vector<CombatAction> Game::enemyPhase() {
 			targetIndex = aliveHeroes[generator() % aliveHeroes.size()];
 			heroes[targetIndex].setIncomingDamage(heroes[targetIndex].getIncomingDamage() + (roll.action == ATTACK ? roll.value : 0));
 
-			CombatAction action(roll, i, 0, targetIndex, enemies[i].getName(), heroes[targetIndex].getName());
+			CombatAction action(roll, enemies[i].getName(), i, 1, heroes[targetIndex].getName(), targetIndex, 0);
 
 			Display::showIntent(action);
+			std::cout << std::endl;
 
 			actions.push_back(action);
 		}
 		else {
-			actions.push_back(CombatAction(DiceFace(EMPTY, NONE, 0), i, 1, 0, enemies[i].getName(), "")); // No action for dead enemies
+			actions.push_back(CombatAction(DiceFace(EMPTY, NONE, 0), enemies[i].getName(), i, 1, "", -1, 0)); // No action for dead enemies
 		}
 	}
+	std::cout << std::endl;
 	return actions;
 }
 
@@ -137,9 +150,7 @@ void Game::heroPhase() {
 		for (size_t i = 0; i < heroes.size(); ++i) {
 				if (heroes[i].isAlive() && anyEnemiesAlive()) {
 						int rerolls = 2;
-						DiceFace roll = heroes[i].roll();
-						std::cout << std::endl;
-						Display::showDiceRoll(heroes[i].getName(), roll);
+						DiceFace roll = Display::animatedRoll(heroes[i]);
 						std::cout << std::endl;
 
 						while (rerolls > 0) {
@@ -149,9 +160,8 @@ void Game::heroPhase() {
 
 								if (choice == 2) {
 									Display::clearLines(4);
-									std::cout << std::endl << "Rerolling..." << std::endl << std::endl;
-									roll = heroes[i].roll();
-									Display::showDiceRoll(heroes[i].getName(), roll);
+									std::cout << "Rerolling..." << std::endl << std::endl;
+									roll = Display::animatedRoll(heroes[i]);
 									rerolls--;
 								} else {
 									// Display::clearLines(3);
@@ -161,14 +171,14 @@ void Game::heroPhase() {
 						}
 						if (roll.target == ENEMY) {
 								int targetChoice = Input::getTargetChoice(enemies);
-								CombatAction action(roll, i, 1, targetChoice, heroes[i].getName(), enemies[targetChoice].getName());
+								CombatAction action(roll, heroes[i].getName(), i, 0, enemies[targetChoice].getName(), targetChoice, 1);
 								executeAction(action);
 						} else if (roll.target == ALLY) {
 								int targetChoice = Input::getTargetChoice(heroes);
-								CombatAction action(roll, i, 0, targetChoice, heroes[i].getName(), heroes[targetChoice].getName());
+								CombatAction action(roll, heroes[i].getName(), i, 0, heroes[targetChoice].getName(), targetChoice, 0);
 								executeAction(action);
 						} else { // NONE target
-								CombatAction action(roll, i, 0, 0, heroes[i].getName(), "");
+								CombatAction action(roll, heroes[i].getName(), i, 0, "", -1, 0);
 								executeAction(action);
 						}
 				}
@@ -220,4 +230,17 @@ void Game::resolveTurn(const std::vector<CombatAction>& enemyActions) {
 
     std::cout << "--- END OF TURN ---" << std::endl;
     std::cout << std::endl;
+}
+
+void Game::recalculateIncomingDamage() {
+		for (auto& hero : heroes) {
+				hero.setIncomingDamage(0);
+		}
+		for (const auto& action : enemyPhase()) {
+				if (action.roll.action == ATTACK && action.targetTeam == 0) { // Targeting heroes
+						if (action.targetIndex >= 0 && static_cast<size_t>(action.targetIndex) < heroes.size()) {
+								heroes[action.targetIndex].setIncomingDamage(heroes[action.targetIndex].getIncomingDamage() + action.roll.value);
+						}
+				}
+		}
 }

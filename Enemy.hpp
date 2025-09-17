@@ -6,8 +6,8 @@
 
 class Enemy : public Character {
 public:
-    Enemy(const std::string& enemy_name, int enemy_health)
-    : Character(enemy_name, enemy_health, createEnemyDie()) {}
+    Enemy(const std::string& enemy_name, int enemy_health, const std::string& team = "Enemy")
+    : Character(enemy_name, enemy_health, createEnemyDie(), team) {}
 
 private:
     std::vector<DiceFace> createEnemyDie() {
@@ -21,5 +21,6 @@ private:
         return faces;
     }
 };
+
 
 #endif

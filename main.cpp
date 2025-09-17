@@ -62,9 +62,9 @@ int main(void) {
 	game.addHero("Legolas", 15);
 
 	// Setup enemies
-	game.addEnemy("Orc", 7);
-	game.addEnemy("Goblin", 5);
-	game.addEnemy("Troll", 12);
+	game.addEnemy("Orc", 3);
+	game.addEnemy("Goblin", 2);
+	game.addEnemy("Troll", 5);
 
 	// Start the game
 	game.playGame();

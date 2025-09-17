@@ -6,9 +6,17 @@
 #include <string>
 #include <type_traits>
 #include <vector>
+#include <thread>
+#include <chrono>
 
 #include "Die.hpp"
-#include "Game.hpp"  // For CombatAction
+#include "Character.hpp"
+
+
+struct CombatAction;
+struct ActionResult;
+class Hero;
+class Enemy;
 
 // Color codes
 namespace Colors {
@@ -54,16 +62,15 @@ namespace Colors {
 			static void showStatus(const T& character) {
 					if constexpr (std::is_same_v<T, Hero>) {
 							std::cout << Colors::GREEN << character.getName() << Colors::RESET << ": ";
-							showHealthBar(character);
 					} else {
 							std::cout << Colors::RED << character.getName() << Colors::RESET << ": ";
-							showHealthBar(character);
+						}
+					showHealthBar(character);
 					}
-			}
 
 			// Action display
 			static void showIntent(const CombatAction& action);
-			static void showDiceRoll(const std::string& name, const DiceFace& roll);
+			static DiceFace animatedRoll(Character& character);
 			static void showActionResult(const CombatAction& action, const ActionResult& result);
 
 			// Utility
@@ -71,8 +78,9 @@ namespace Colors {
 			static void pressEnterToContinue();
 			static void clearLines(int numLines);
 
-			//
-
+			//Aesthetic/UX Enhancements
+			static void typeText(const std::string& text, int delayMs = 50);
+			static void blinkText(const std::string& text, int blinks = 3);
 };
 
 #endif

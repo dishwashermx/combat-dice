@@ -28,4 +28,5 @@ void Input::pressEnterToContinue() {
     std::cout << "Press Enter to continue...";
     std::cin.ignore();
     std::cin.get();
+		Display::clearLines(2);
 }

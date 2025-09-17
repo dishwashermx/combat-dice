@@ -8,18 +8,21 @@
 #include "Die.hpp"
 #include "Hero.hpp"
 #include "Enemy.hpp"
+#include "Display.hpp"
+#include "Input.hpp"
 
 struct CombatAction
 {
 	DiceFace roll;
-	int actorIndex;
-	int targetTeam; // 0 for hero, 1 for enemy
-	int targetIndex;
 	std::string actorName;
+	int actorIndex;
+	int actorTeam; // 0 for hero, 1 for enemy
 	std::string targetName;
+	int targetIndex;
+	int targetTeam; // 0 for hero, 1 for enemy
 
-	CombatAction(DiceFace r, int aIdx, int tTeam, int tIdx, const std::string& aName, const std::string& tName)
-	: roll(r), actorIndex(aIdx), targetTeam(tTeam), targetIndex(tIdx), actorName(aName), targetName(tName) {}
+	CombatAction(DiceFace r, std::string aName, int aIdx, int aTeam, std::string tName, int tIdx, int tTeam)
+	: roll(r), actorName(aName), actorIndex(aIdx), actorTeam(aTeam), targetName(tName), targetIndex(tIdx), targetTeam(tTeam) {}
 };
 
 
@@ -44,6 +47,7 @@ class Game {
 		bool anyHeroesAlive() const;
 		bool anyEnemiesAlive() const;
 		Hero& getRandomAliveHero();
+		void recalculateIncomingDamage();
 
 		// Core game methods
 		void playGame();

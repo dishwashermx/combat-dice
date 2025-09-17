@@ -6,8 +6,8 @@
 
 class Hero : public Character {
 public:
-    Hero(const std::string& hero_name, int hero_health)
-    : Character(hero_name, hero_health, createHeroDie()) {}
+    Hero(const std::string& hero_name, int hero_health, const std::string& team = "Hero")
+    : Character(hero_name, hero_health, createHeroDie(), team) {}
 
 private:
     std::vector<DiceFace> createHeroDie() {

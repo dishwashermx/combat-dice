@@ -28,18 +28,18 @@ struct ActionResult {
 class Character {
 protected:
 		std::string name;
+		std::string team; // "Hero" or "Enemy"
 		int max_health;
 		int health;
 		int incoming_damage;
 		int shield;
+		int round_death; // Track the round in which the character died
 		Die die;
 
 public:
-		Character(const std::string& char_name, int char_health)
-		: name(char_name), max_health(char_health), health(char_health), incoming_damage(0), shield(0), die() {}
-
-		Character(const std::string& char_name, int char_health, const std::vector<DiceFace>& customFaces)
-		: name(char_name), max_health(char_health), health(char_health), incoming_damage(0), shield(0), die(customFaces) {}
+		Character(const std::string& char_name, int char_health, const std::vector<DiceFace>& customFaces, const std::string& char_team = "")
+		: name(char_name), team(char_team), max_health(char_health), health(char_health),
+		  incoming_damage(0), shield(0), round_death(-1), die(customFaces) {}
 
 		virtual ~Character() {}	// Virtual destructor for proper inheritance
 
@@ -55,9 +55,15 @@ public:
 			if (shield > 0) {
 				int blocked = std::min(shield, actualDamage);
 				result.newShield -= blocked;
+				shield -= blocked;
 				actualDamage -= blocked;
 				result.damageBlocked = blocked;
 			}
+
+			if (health == 0) {
+				actualDamage = 0;
+			}
+
 			if (actualDamage > 0) {
 				health -= actualDamage;
 				if (health < 0)
@@ -76,12 +82,15 @@ public:
 				appliedHealing = 0; // No healing needed
 			} else if (health + amount > max_health) {
 				appliedHealing = max_health - health; // Heal to full health
+				incoming_damage = 0; // Clear incoming damage when healed to full
 			}
 
 			health += appliedHealing;
 			result.healingAttempted = amount;
 			result.healingApplied = appliedHealing;
 			result.newHealth = health;
+			incoming_damage -= appliedHealing;
+			if (incoming_damage < 0) incoming_damage = 0;
 
 			return result;
 		}
@@ -102,6 +111,10 @@ public:
 
 		bool isAlive() const {
 				return health > 0;
+		}
+
+		void setRoundOfDeath(int round) {
+				round_death = round;
 		}
 
 		const std::string& getName() const {
@@ -129,9 +142,22 @@ public:
 				return shield;
 		}
 
+		const std::string& getTeam() const {
+				return team;
+		}
+
 		void displayDie() const {
   		die.displayFaces();
 		}
+
+		void displayTeamInfo(const Character& character) {
+				std::cout << character.getName() << " is on team: " << character.getTeam() << std::endl;
+		}
+
+		int getRoundOfDeath() const {
+				return round_death;
+		}
 };
+
 
 #endif
