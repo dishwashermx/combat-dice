@@ -1,0 +1,121 @@
+#include "Character.hpp"
+
+// ===== CONSTRUCTOR & DESTRUCTOR =====
+Character::Character(const std::string& name, int health, const std::vector<DiceFace>& customFaces, const std::string& team)
+: name(name), team(team), max_health(health), health(health), incoming_damage(0), shield(0), round_death(-1), die(customFaces) {}
+
+
+// ===== CORE GAME METHODS =====
+DiceFace Character::roll() {
+    DiceFace result = die.rollFace();
+    return result;
+}
+
+ActionResult Character::takeDamage(int damage) {
+    int actualDamage = damage;
+    ActionResult result = {0, 0, 0, 0, 0, health, shield, health, shield};
+
+    if (shield > 0) {
+        int blocked = std::min(shield, actualDamage);
+        result.newShield -= blocked;
+        shield -= blocked;
+        actualDamage -= blocked;
+        result.damageBlocked = blocked;
+    }
+
+    if (health == 0) {
+        actualDamage = 0;
+    }
+
+    if (actualDamage > 0) {
+        health -= actualDamage;
+        if (health < 0)
+            health = 0;
+        result.damageDealt = actualDamage;
+        result.newHealth = health;
+    }
+    return result;
+}
+
+ActionResult Character::heal(int amount) {
+    int appliedHealing = amount;
+    ActionResult result = {0, 0, 0, 0, 0, health, shield, health, shield};
+
+    if (health == max_health) {
+        appliedHealing = 0; // No healing needed
+    } else if (health + amount > max_health) {
+        appliedHealing = max_health - health; // Heal to full health
+        incoming_damage = 0; // Clear incoming damage when healed to full
+    }
+
+    health += appliedHealing;
+    result.healingAttempted = amount;
+    result.healingApplied = appliedHealing;
+    result.newHealth = health;
+    incoming_damage -= appliedHealing;
+    if (incoming_damage < 0) incoming_damage = 0;
+
+    return result;
+}
+
+ActionResult Character::addShield(int amount) {
+    ActionResult result = {0, 0, 0, 0, 0, health, shield, health, shield};
+
+    shield += amount;
+    result.shieldAdded = amount;
+    result.newShield = shield;
+
+    return result;
+}
+
+bool Character::isAlive() const {
+    return health > 0;
+}
+
+// ===== GETTERS =====
+const std::string& Character::getName() const {
+    return name;
+}
+
+int Character::getHealth() const {
+    return health;
+}
+
+int Character::getMaxHealth() const {
+    return max_health;
+}
+
+int Character::getShield() const {
+    return shield;
+}
+
+const std::string& Character::getTeam() const {
+    return team;
+}
+
+int Character::getIncomingDamage() const {
+    return incoming_damage;
+}
+
+int Character::getRoundOfDeath() const {
+    return round_death;
+}
+
+// ===== SETTERS =====
+int Character::setIncomingDamage(int damage) {
+    incoming_damage = damage;
+    return incoming_damage;
+}
+
+void Character::setRoundOfDeath(int round) {
+    round_death = round;
+}
+
+void Character::resetShield() {
+    shield = 0;
+}
+
+// ===== DISPLAY METHODS =====
+void Character::displayDie() const {
+    die.displayFaces();
+}

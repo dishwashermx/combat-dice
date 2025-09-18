@@ -15,8 +15,6 @@
 
 struct CombatAction;
 struct ActionResult;
-class Hero;
-class Enemy;
 
 // Color codes
 namespace Colors {
@@ -42,7 +40,7 @@ namespace Colors {
 			static void showHealthBar(const T& character) {
 					for (int i = 0; i < character.getMaxHealth(); ++i) {
 							if (i < (character.getHealth() - character.getIncomingDamage() + character.getShield())) {
-									if constexpr (std::is_same_v<T, Hero>) {
+									if (character.getTeam() == "Hero") {
 											std::cout << "💚 ";
 									} else {
 											std::cout << "❤️  ";
@@ -60,7 +58,7 @@ namespace Colors {
 
 			template<typename T>
 			static void showStatus(const T& character) {
-					if constexpr (std::is_same_v<T, Hero>) {
+					if (character.getTeam() == "Hero") {
 							std::cout << Colors::GREEN << character.getName() << Colors::RESET << ": ";
 					} else {
 							std::cout << Colors::RED << character.getName() << Colors::RESET << ": ";

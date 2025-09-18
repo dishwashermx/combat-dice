@@ -20,9 +20,17 @@ int Input::getPlayerChoice(int min, int max) {
 		return -1; // Should never reach here
 }
 
-// Add explicit template instantiations at the end of the file:
-template int Input::getTargetChoice<Hero>(const std::vector<Hero>& characters);
-template int Input::getTargetChoice<Enemy>(const std::vector<Enemy>& characters);
+int Input::getTargetChoice(const std::vector<Character>& characters) {
+		std::cout << "Choose your target:" << std::endl;
+
+		for (size_t i = 0; i < characters.size(); ++i) {
+				std::cout << (i + 1) << ". " << characters[i].getName() << ": ";
+				Display::showHealthBar(characters[i]);
+				std::cout << std::endl;
+		}
+
+		return getPlayerChoice(1, characters.size()) - 1;
+}
 
 void Input::pressEnterToContinue() {
     std::cout << "Press Enter to continue...";

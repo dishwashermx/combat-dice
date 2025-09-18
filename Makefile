@@ -1,19 +1,35 @@
 NAME = dice
-SRC = main.cpp Game.cpp Die.cpp Display.cpp Input.cpp
-OBJ = $(SRC:.cpp=.o)
-FLAGS = -Wall -Wextra -Werror
+SRCDIR = src
+INCDIR = incl
+OBJDIR = obj
 
-all: $(NAME)
+# Core source files (stays same)
+SRC = main.cpp Game.cpp Die.cpp Display.cpp Input.cpp CharacterFactory.cpp Character.cpp Wave.cpp
+
+# Build rules
+SRCFILES = $(addprefix $(SRCDIR)/, $(SRC))
+OBJ = $(addprefix $(OBJDIR)/, $(SRC:.cpp=.o))
+
+FLAGS = -Wall -Wextra -Werror
+INCLUDES = -I$(INCDIR)
+
+all: $(OBJDIR) $(NAME)
+
+$(OBJDIR):
+	mkdir -p $(OBJDIR)
 
 $(NAME): $(OBJ)
 	g++ $(FLAGS) -o $(NAME) $(OBJ)
 
-%.o: %.cpp
-	g++ $(FLAGS) -c $< -o $@
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp
+	g++ $(FLAGS) $(INCLUDES) -c $< -o $@
 
 clean:
 	rm -f $(NAME) $(OBJ)
 
-re: clean all
+fclean: clean
+	rm -rf $(OBJDIR)
 
-.PHONY: all clean re
+re: fclean all
+
+.PHONY: all clean fclean re

@@ -1,7 +1,5 @@
 #include "Display.hpp"
-#include "Game.hpp"  // Now include Game.hpp here for the full definitions
-#include "Hero.hpp"
-#include "Enemy.hpp"
+#include "Wave.hpp"
 
 void Display::showRoundHeader(int round) {
 	std::cout << Colors::BOLD << Colors::CYAN
