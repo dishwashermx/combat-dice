@@ -32,8 +32,8 @@ int Input::getTargetChoice(const std::vector<Character>& characters) {
 		return getPlayerChoice(1, characters.size()) - 1;
 }
 
-void Input::pressEnterToContinue() {
-    std::cout << "Press Enter to continue...";
+void Input::pressEnterToContinue(std::string message) {
+    std::cout << message;
     std::cin.ignore();
     std::cin.get();
 		Display::clearLines(2);

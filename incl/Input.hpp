@@ -9,7 +9,7 @@
 class Input {
 public:
     static int getPlayerChoice(int min, int max);
-    static void pressEnterToContinue();
+    static void pressEnterToContinue(std::string message = "Press Enter to continue...");
 
     static int getTargetChoice(const std::vector<Character>& characters);
 };

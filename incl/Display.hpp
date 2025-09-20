@@ -33,27 +33,43 @@ namespace Colors {
 	class Display {
 		public:
 			// Status display
+			static void titleScreen();
+			static void showWaveHeader(int wave);
 			static void showRoundHeader(int round);
 			static void showGameOver(bool heroesWin);
 
 			template<typename T>
 			static void showHealthBar(const T& character) {
-					for (int i = 0; i < character.getMaxHealth(); ++i) {
-							if (i < (character.getHealth() - character.getIncomingDamage() + character.getShield())) {
-									if (character.getTeam() == "Hero") {
-											std::cout << "💚 ";
-									} else {
-											std::cout << "❤️  ";
-									}
-							} else if (i < character.getHealth()) {
-									std::cout << "💛 ";
-							} else {
-									std::cout << "🖤 ";
-							}
+				int health = character.getHealth();
+				int maxHealth = character.getMaxHealth();
+				int shield = character.getShield();
+				int incomingDamage = character.getIncomingDamage();
+
+				// Calculate damage distribution
+				int damageToShield = std::min(shield, incomingDamage);
+				int damageToHealth = std::max(0, incomingDamage - shield);
+
+				// Show health hearts (current health minus damage that gets through shield)
+				for (int i = 0; i < maxHealth; ++i) {
+					if (i < (health - damageToHealth)) {
+						if (character.getTeam() == "Hero") {
+							std::cout << "💚 ";
+						} else {
+							std::cout << "❤️  ";
+						}
+					} else if (i < health) {
+						// Health that will be lost (yellow hearts)
+						std::cout << "💛 ";
+					} else {
+						std::cout << "🖤 ";
 					}
-					for (int i = 0; i < (character.getShield() - character.getIncomingDamage()); ++i) {
-							std::cout << "🛡️  ";
-					}
+				}
+
+				// Show remaining shield after blocking damage
+				int remainingShield = std::max(0, shield - damageToShield);
+				for (int i = 0; i < remainingShield; ++i) {
+					std::cout << "🛡️  ";
+				}
 			}
 
 			template<typename T>

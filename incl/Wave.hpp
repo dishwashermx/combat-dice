@@ -31,6 +31,9 @@ class Wave {
 		Wave(Game& gameRef);
 
 		void playWave();
+		void setupWave();
+		void playRound();
+		bool isRoundOver() const;
 		void heroPhase();
 		void executeAction(CombatAction action);
 		void recalculateIncomingDamage();

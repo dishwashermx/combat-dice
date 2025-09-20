@@ -1,16 +1,34 @@
 #include "Game.hpp"
 #include "Wave.hpp"
 
-Game::Game() {}
+Game::Game() : waveNumber{1} {}
 
 void Game::playGame() {
 	mainMenu();
 	partySetup();
-	while (wave < 3 && anyHeroesAlive()) {
-			Wave wave(*this);
-			wave.playWave();
+	while (waveNumber < 3 && anyHeroesAlive()) {
+		Wave wave(*this);
+		wave.setupWave();
+		wave.playWave();
+		while (anyHeroesAlive() && anyMonstersAlive()) {
+			wave.playRound();
+			if (wave.isRoundOver())
+			break;
+		}
+		monsters.clear();
+		waveNumber++;
 	}
 	Display::showGameOver(anyHeroesAlive());
+}
+
+void Game::mainMenu() {
+		Display::titleScreen();
+    Input::pressEnterToContinue("");
+	return;
+}
+
+void Game::partySetup() {
+	addHero();
 }
 
 void Game::addHero() {
@@ -45,8 +63,4 @@ Character& Game::getRandomAliveHero() {
 		}
 		int randomIndex = aliveHeroes[generator() % aliveHeroes.size()];
 		return heroes[randomIndex];
-}
-
-bool Game::isGameOver() const {
-		return !anyHeroesAlive() || !anyMonstersAlive();
 }

@@ -4,11 +4,15 @@
 
 Wave::Wave(Game& gameRef) : game(gameRef), round(1) {}
 
+void Wave::setupWave() {
+	game.addMonster();
+}
+
 void Wave::playWave() {
-	Display::showRoundHeader(round);
-	for (auto& hero : game.heroes) {
-			hero.resetShield(); // Reset shields at the start of each round
-			hero.setIncomingDamage(0); // Reset incoming damage
+	Display::showWaveHeader(game.waveNumber);
+		for (auto& hero : game.heroes) {
+			hero.resetShield();
+			hero.setIncomingDamage(0);
 			Display::showStatus(hero);
 			std::cout << std::endl;
 			hero.displayDie();
@@ -17,8 +21,8 @@ void Wave::playWave() {
 	std::cout << std::endl;
 	for (auto& monster : game.monsters) {
 		if (monster.isAlive()) {
-			monster.resetShield(); // Reset shields at the start of each round
-			monster.setIncomingDamage(0); // Reset incoming damage
+			monster.resetShield();
+			monster.setIncomingDamage(0);
 			Display::showStatus(monster);
 			std::cout << std::endl;
 		}
@@ -27,12 +31,25 @@ void Wave::playWave() {
 
 	Input::pressEnterToContinue();
 
-	std::vector<CombatAction> monsterRolls = monsterPhase();  // All monsters roll
-	heroPhase();    // All heroes roll/reroll and execute
+}
 
-	resolveTurn(monsterRolls);               // Resolve all actions
+void Wave::playRound() {
+    Display::showRoundHeader(round);
 
-	round++;
+    for (auto& hero : game.heroes) {
+        hero.resetShield();
+        hero.setIncomingDamage(0);
+    }
+    for (auto& monster : game.monsters) {
+        monster.resetShield();
+        monster.setIncomingDamage(0);
+    }
+
+    std::vector<CombatAction> monsterRolls = monsterPhase();
+    heroPhase();
+    resolveTurn(monsterRolls);
+
+    round++;
 }
 
 void Wave::heroPhase() {
@@ -202,4 +219,8 @@ void Wave::resolveTurn(const std::vector<CombatAction>& monsterActions) {
 
     std::cout << "--- END OF TURN ---" << std::endl;
     std::cout << std::endl;
+}
+
+bool Wave::isRoundOver() const {
+		return !game.anyHeroesAlive() || !game.anyMonstersAlive();
 }

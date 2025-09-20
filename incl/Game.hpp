@@ -17,10 +17,11 @@ class Game {
 		std::vector<Character> heroes;
 		std::vector<Character> monsters;
     std::mt19937 generator{std::random_device{}()};  // Initialize generator
-		int wave;
+		int waveNumber;
 
 		public:
 				Game();
+				void mainMenu();
 
 				// Character management
 				void addHero();
@@ -29,11 +30,12 @@ class Game {
 				// Game state
 				bool anyHeroesAlive() const;
 				bool anyMonstersAlive() const;
-				bool isGameOver() const;
+				bool isRoundOver() const;
 				Character& getRandomAliveHero();
 
 				// Battle
 				void playGame();
+				void partySetup();
 };
 
 #endif
