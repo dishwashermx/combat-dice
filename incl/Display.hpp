@@ -27,6 +27,7 @@ namespace Colors {
     const std::string CYAN = "\033[36m";
     const std::string WHITE = "\033[37m";
     const std::string BOLD = "\033[1m";
+		const std::string GREY = "\033[90m";
 	}
 
 
@@ -34,6 +35,7 @@ namespace Colors {
 		public:
 			// Status display
 			static void titleScreen();
+			static void showHeader(std::string type, int number);
 			static void showWaveHeader(int wave);
 			static void showRoundHeader(int round);
 			static void showGameOver(bool heroesWin);
@@ -83,6 +85,7 @@ namespace Colors {
 					}
 
 			// Action display
+			static void displayFaces(const std::vector<DiceFace>& faces);
 			static void showIntent(const CombatAction& action);
 			static DiceFace animatedRoll(Character& character);
 			static void showActionResult(const CombatAction& action, const ActionResult& result);
@@ -91,6 +94,7 @@ namespace Colors {
 			static void clearScreen();
 			static void pressEnterToContinue();
 			static void clearLines(int numLines);
+			static std::string marksToEmoji(int marks);
 
 			//Aesthetic/UX Enhancements
 			static void typeText(const std::string& text, int delayMs = 50);

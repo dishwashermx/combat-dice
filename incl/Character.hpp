@@ -28,7 +28,7 @@ struct ActionResult {
 class Character {
 	protected:
 			std::string name;
-			std::string team; // "Hero" or "Monster"
+			std::string team;
 			int max_health;
 			int health;
 			int incoming_damage;
@@ -58,6 +58,9 @@ class Character {
 			// Setters
 			void setRoundOfDeath(int round);
 			int setIncomingDamage(int damage);
+			void setMaxHealth(int newMaxHealth);
+			void setHealth(int newHealth);
+			void setShield(int newShield);
 
 			// Utility
 			void resetShield();

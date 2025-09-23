@@ -5,11 +5,13 @@
 #include "Character.hpp"
 
 namespace CharacterFactory {
-		// Heroes
-		Character createKnight();
+	// Heroes
+	Character createKnight();
+	// Character createAssassin();
 
-		// Monsters
-		Character createGoblin();
+	// Monsters
+	Character createGoblin();
+	// Character createOrc();
     // HEROES (20 types)
     // Tank-type heroes
     // Character createKnight();
@@ -20,7 +22,6 @@ namespace CharacterFactory {
     // // DPS-type heroes
     // Character createBerserker();
     // Character createArcher();
-    // Character createAssassin();
     // Character createRanger();
     // Character createWarrior();
 
@@ -50,7 +51,6 @@ namespace CharacterFactory {
     // Character createSlime();
 
     // // Medium monsters
-    // Character createOrc();
     // Character createWolf();
     // Character createZombie();
     // Character createBandit();

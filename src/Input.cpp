@@ -34,7 +34,6 @@ int Input::getTargetChoice(const std::vector<Character>& characters) {
 
 void Input::pressEnterToContinue(std::string message) {
     std::cout << message;
-    std::cin.ignore();
     std::cin.get();
-		Display::clearLines(2);
+    Display::clearLines(2);
 }

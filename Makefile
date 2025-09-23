@@ -1,4 +1,4 @@
-NAME = dice
+NAME = play
 SRCDIR = src
 INCDIR = incl
 OBJDIR = obj

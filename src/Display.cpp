@@ -1,24 +1,24 @@
 #include "Display.hpp"
 #include "Wave.hpp"
 
-void Display::showRoundHeader(int round) {
+void Display::showHeader(std::string type, int number) {
     std::string prefix = "========== ";
-    std::string roundString = "ROUND " + std::to_string(round);
+    std::string headerString = type + " " + std::to_string(number);
     std::string suffix = " ==========";
 
     // Clear some space for the animation
     std::cout << std::endl;
 
-    // Animate "ROUND" word
-    for (size_t charPos = 0; charPos < roundString.length(); ++charPos) {
+    // Animate string word
+    for (size_t charPos = 0; charPos < headerString.length(); ++charPos) {
         // Show rolling characters for current position
-        for (int rollFrame = 0; rollFrame < 3; ++rollFrame) {
+        for (int rollFrame = 0; rollFrame < 4; ++rollFrame) {
             // Move cursor back to start
             std::cout << "\r" << Colors::BOLD << Colors::CYAN << prefix << Colors::RESET;
 
             // Print already settled letters
             for (size_t i = 0; i < charPos; ++i) {
-                std::cout << Colors::BOLD << Colors::YELLOW << roundString[i] << Colors::RESET;
+                std::cout << Colors::BOLD << Colors::YELLOW << headerString[i] << Colors::RESET;
             }
 
             // Show rolling character for current position
@@ -26,11 +26,11 @@ void Display::showRoundHeader(int round) {
             std::cout << Colors::YELLOW << rollingChar << Colors::RESET;
 
             // Show rolling characters for ALL remaining positions
-            for (size_t i = charPos + 1; i < roundString.length(); ++i) {
+            for (size_t i = charPos + 1; i < headerString.length(); ++i) {
                 char futureRollingChar;
-                if (roundString[i] == ' ') {
+                if (headerString[i] == ' ') {
                     futureRollingChar = ' '; // Keep spaces as spaces
-                } else if (isdigit(roundString[i])) {
+                } else if (isdigit(headerString[i])) {
                     futureRollingChar = '0' + (rand() % 10); // Random digit
                 } else {
                     futureRollingChar = 'A' + (rand() % 26); // Random letter
@@ -40,13 +40,13 @@ void Display::showRoundHeader(int round) {
 
             std::cout << Colors::BOLD << Colors::CYAN << suffix << Colors::RESET;
             std::cout << std::flush;
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            std::this_thread::sleep_for(std::chrono::milliseconds(15));
         }
     }
 
 		// Finally, print the complete settled line
 		std::cout << "\r" << Colors::BOLD << Colors::CYAN << prefix << Colors::RESET;
-		std::cout << Colors::BOLD << Colors::YELLOW << roundString << Colors::RESET;
+		std::cout << Colors::BOLD << Colors::YELLOW << headerString << Colors::RESET;
 		std::cout << Colors::BOLD << Colors::CYAN << suffix << Colors::RESET;
 		std::cout << std::flush << std::endl;
 
@@ -63,10 +63,17 @@ void Display::showIntent(const CombatAction& action) {
     }
 
     // Build the action string with colors
-    std::string actionText = Colors::BOLD + actionToString(action.roll.action) + Colors::RESET;
-    if (!action.targetName.empty()) {
+    // Use description if available, otherwise fallback to actionToString
+    std::string actionText = action.roll.desc.empty() ?
+        Colors::BOLD + actionToString(action.roll.action) + Colors::RESET :
+        "use " + Colors::BOLD + action.roll.name + Colors::RESET + " on";
+
+		// Add target with color based on team
+    if (!action.targetName.empty() && action.targetTeam == 1)
         actionText += " " + Colors::GREEN + action.targetName + Colors::RESET;
-    }
+    else
+				actionText += " " + Colors::RED + action.targetName + Colors::RESET;
+
     actionText += " for " + Colors::YELLOW + std::to_string(action.roll.value) + Colors::RESET;
 
     // Add suffix based on action type
@@ -82,37 +89,48 @@ void Display::showIntent(const CombatAction& action) {
 }
 
 void Display::showActionResult(const CombatAction& action, const ActionResult& result) {
+	std::string actorName = action.actorName;
+	std::string targetName = action.targetName;
+	std::string actionValue = std::to_string(action.roll.value);
+
 	if (action.roll.action == EMPTY) {
-		std::cout << Colors::MAGENTA << action.actorName << " does nothing..." << Colors::RESET << std::endl;
+		std::cout << Colors::MAGENTA << actorName << " does nothing..." << Colors::RESET << std::endl;
 		return ;
 	}
-	std::cout << Colors::GREEN << action.actorName << Colors::RESET << " "
-	<< Colors::BOLD << actionToString(action.roll.action) << "s " << Colors::RESET;
+	std::cout << Colors::GREEN << actorName << Colors::RESET << " ";
 
-	if (!action.targetName.empty() && action.targetName != action.actorName) {
-		std::cout << Colors::RED << action.targetName << Colors::RESET;
+	// Use description if available, otherwise fallback to actionToString + "s"
+	if (!action.roll.desc.empty()) {
+		std::cout << Colors::BOLD << action.roll.desc << Colors::RESET << " ";
+	} else {
+		std::cout << Colors::BOLD << actionToString(action.roll.action) << "s " << Colors::RESET;
+	}
+
+	if (!targetName.empty() && targetName != actorName) {
+		std::cout << Colors::RED << targetName << Colors::RESET;
 		std::cout << " ";
 	}
 
-	std::cout << "for " << Colors::BOLD << action.roll.value << Colors::RESET;
+	std::cout << "for " << Colors::BOLD << actionValue << Colors::RESET;
 
 	if (action.roll.action == ATTACK) {
 		std::cout << " damage!" << std::endl;
 	if (result.damageBlocked > 0) {
-		std::cout << Colors::BLUE << action.targetName << "'s shield absorbed " << result.damageBlocked << " damage!" << Colors::RESET << std::endl;
+		std::cout << Colors::BLUE << targetName << "'s shield absorbed " << result.damageBlocked << " damage!" << Colors::RESET << std::endl;
 	}
 	if (result.damageDealt > 0) {
-		std::cout << Colors::RED << action.targetName << " took " << result.damageDealt << " damage!" << Colors::RESET << std::endl;
-		std::cout << action.targetName << " HP left: " << Colors::BOLD << result.newHealth << Colors::RESET << std::endl;
+		std::cout << Colors::RED << targetName << " took " << result.damageDealt << " damage!" << Colors::RESET << std::endl;
+		std::cout << targetName << " HP left: " << Colors::BOLD << result.newHealth << Colors::RESET << std::endl;
 	}
 	} else if (action.roll.action == HEAL) {
 	std::cout << " HP!" << std::endl;
 	if (result.healingApplied > 0) {
-		std::cout << Colors::GREEN << action.targetName << " healed for " << result.healingApplied << " HP!" << Colors::RESET << std::endl;
+		std::cout << Colors::GREEN << targetName << " healed for " << result.healingApplied << " HP!" << Colors::RESET << std::endl;
 	}
 	} else if (action.roll.action == BLOCK) {
 			std::cout << " shield!" << std::endl;
 	}
+	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 }
 
 		void Display::clearScreen() {
@@ -127,7 +145,7 @@ void Display::showActionResult(const CombatAction& action, const ActionResult& r
 			if (heroesWin) {
 				std::cout << Colors::GREEN << Colors::BOLD << "🎉 HEROES WIN! 🎉" << Colors::RESET << std::endl;
 			} else {
-				std::cout << Colors::RED << Colors::BOLD << "💀 ENEMIES WIN! 💀" << Colors::RESET << std::endl;
+				std::cout << Colors::RED << Colors::BOLD << "💀 MONSTERS WIN! 💀" << Colors::RESET << std::endl;
 			}
 		}
 
@@ -182,8 +200,8 @@ DiceFace Display::animatedRoll(Character& character) {
         // Create temporary fake roll for animation with all required parameters
         DiceFace tempRoll(
             static_cast<Action>(rand() % 4),  // Random action
-            static_cast<Target>(rand() % 3),  // Random target
-            1 + (rand() % 6)                  // Random value 1-6
+            1 + (rand() % 6),                 // Random value 1-6
+            NO_MARK                           // No marks for animation
         );
 
         std::cout << "\r🎲 " << tempRoll.value << " ("
@@ -193,9 +211,13 @@ DiceFace Display::animatedRoll(Character& character) {
 
     // Final actual roll (this is the one that counts)
     DiceFace finalRoll = character.roll();
+
+    // Use the name if available, otherwise fallback to actionToString
+    std::string rollName = finalRoll.name.empty() ? actionToString(finalRoll.action) : finalRoll.name;
+
     std::cout << "\r🎲  " << Colors::BOLD << finalRoll.value
               << Colors::RESET << " (" << Colors::YELLOW
-              << actionToString(finalRoll.action) << Colors::RESET << ")!"
+              << rollName << Colors::RESET << ")!"
               << std::endl;
 
     return finalRoll;
@@ -212,61 +234,87 @@ void Display::titleScreen() {
     std::cout << "                   __/ |            __/ |             " << std::endl;
     std::cout << "                  |___/            |___/              " << Colors::RESET << std::endl;
     std::cout << std::endl;
-    std::cout << Colors::BOLD << Colors::YELLOW << "Welcome to the Ultimate Dice Battle Arena!" << Colors::RESET << std::endl;
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+		std::cout << Colors::BOLD << Colors::YELLOW << "Welcome to the Ultimate Dice Battle Arena!" << Colors::RESET << std::endl;
+		std::this_thread::sleep_for(std::chrono::milliseconds(700));
     std::cout << "Roll your way to victory in epic combat encounters!" << std::endl;
+		std::this_thread::sleep_for(std::chrono::milliseconds(700));
     std::cout << "May fortune favor the bold!" << std::endl << std::endl;
+		std::this_thread::sleep_for(std::chrono::milliseconds(300));
 
-    Display::blinkText(Colors::BOLD + Colors::RED + "Press Enter to start your adventure..." + Colors::RESET, 3);
+    Display::typeText(Colors::BOLD + Colors::RED + "Press Enter to start your adventure..." + Colors::RESET, 40);
 }
 
-void Display::showWaveHeader(int waveNumber) {
-		std::string prefix = "========== ";
-		std::string waveString = "WAVE " + std::to_string(waveNumber);
-		std::string suffix = " ==========";
+void Display::displayFaces(const std::vector<DiceFace>& faces) {
+		for (size_t i = 0; i < faces.size(); i++) {
+				const DiceFace& face = faces[i];
 
-		// Clear some space for the animation
-		std::cout << std::endl;
-
-		// Animate "WAVE" word
-		for (size_t charPos = 0; charPos < waveString.length(); ++charPos) {
-				// Show rolling characters for current position
-				for (int rollFrame = 0; rollFrame < 3; ++rollFrame) {
-						// Move cursor back to start
-						std::cout << "\r" << Colors::BOLD << Colors::CYAN << prefix << Colors::RESET;
-
-						// Print already settled letters
-						for (size_t i = 0; i < charPos; ++i) {
-								std::cout << Colors::BOLD << Colors::YELLOW << waveString[i] << Colors::RESET;
+				// Use the emoji from DiceFace if available, otherwise fallback to action-based emojis
+				std::string emoji = face.emoji;
+				if (emoji.empty()) {
+						if (face.action == ATTACK) {
+								emoji = "⚔️";
+						} else if (face.action == HEAL) {
+								emoji = "💚";
+						} else if (face.action == BLOCK) {
+								emoji = "🛡️";
+						} else {
+								emoji = "✖";
 						}
+				}
 
-						// Show rolling character for current position
-						char rollingChar = 'A' + (rand() % 26);
-						std::cout << Colors::YELLOW << rollingChar << Colors::RESET;
+				// Choose color based on action
+				std::string color;
+				if (face.action == ATTACK) {
+						color = Colors::RED;
+				} else if (face.action == HEAL) {
+						color = Colors::GREEN;
+				} else if (face.action == BLOCK) {
+						color = Colors::BLUE;
+				} else {
+						color = Colors::GREY;
+				}
 
-						// Show rolling characters for ALL remaining positions
-						for (size_t i = charPos + 1; i < waveString.length(); ++i) {
-								char futureRollingChar;
-								if (waveString[i] == ' ') {
-										futureRollingChar = ' '; // Keep spaces as spaces
-								} else if (isdigit(waveString[i])) {
-										futureRollingChar = '0' + (rand() % 10); // Random digit
-								} else {
-										futureRollingChar = 'A' + (rand() % 26); // Random letter
-								}
-								std::cout << Colors::YELLOW << futureRollingChar << Colors::RESET;
-						}
+				// Display the dice face with emoji and value
+				std::cout << color << "[";
 
-						std::cout << Colors::BOLD << Colors::CYAN << suffix << Colors::RESET;
-						std::cout << std::flush;
-						std::this_thread::sleep_for(std::chrono::milliseconds(10));
+				if (face.marks != NO_MARK) {
+						std::cout << marksToEmoji(face.marks);
+						std::cout << " ";
+				}
+
+				std::cout << emoji << "  " << face.value;
+
+				// Add marks emoji if present
+
+				std::cout << "]" << Colors::RESET;
+
+				if (i < faces.size() - 1) {
+						std::cout << " ";
 				}
 		}
+}
 
-		// Finally, print the complete settled line
-		std::cout << "\r" << Colors::BOLD << Colors::CYAN << prefix << Colors::RESET;
-		std::cout << Colors::BOLD << Colors::YELLOW << waveString << Colors::RESET;
-		std::cout << Colors::BOLD << Colors::CYAN << suffix << Colors::RESET;
-		std::cout << std::flush << std::endl;
-		// Brief pause before continuing
-		std::this_thread::sleep_for(std::chrono::milliseconds(300));
+std::string Display::marksToEmoji(int marks) {
+		std::string markEmojis = "";
+
+		if (marks & SPLASH) {
+				markEmojis += "💦";  // SPLASH - affects adjacent targets
+		}
+		if (marks & WAVE) {
+				markEmojis += "🌊";  // WAVE - affects target team
+		}
+		if (marks & QUAKE) {
+				markEmojis += "⛰️";  // QUAKE - affects everyone alive
+		}
+
+		return markEmojis;
+}
+
+void Display::showWaveHeader(int wave) {
+    showHeader("Wave", wave);
+}
+
+void Display::showRoundHeader(int round) {
+    showHeader("Round", round);
 }

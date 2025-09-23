@@ -10,23 +10,14 @@ std::string actionToString(Action action) {
 		}
 }
 
-std::string targetToString(Target target) {
-		switch(target) {
-				case ENEMY: return "enemy";
-				case ALLY: return "ally";
-				case NONE: return "none";
-				default: return "unknown";
-		}
-}
-
 void Die::setupDefaultFaces() {
 	faces.clear();
-	faces.push_back(DiceFace(EMPTY, NONE, 0));
-	faces.push_back(DiceFace(EMPTY, NONE, 2));
-	faces.push_back(DiceFace(EMPTY, NONE, 1));
-	faces.push_back(DiceFace(EMPTY, NONE, 2));
-	faces.push_back(DiceFace(EMPTY, NONE, 1));
-	faces.push_back(DiceFace(EMPTY, NONE, 0));
+	faces.push_back(DiceFace(EMPTY, 0));
+	faces.push_back(DiceFace(EMPTY, 2));
+	faces.push_back(DiceFace(EMPTY, 1));
+	faces.push_back(DiceFace(EMPTY, 2));
+	faces.push_back(DiceFace(EMPTY, 1));
+	faces.push_back(DiceFace(EMPTY, 0));
 }
 
 Die::Die() : generator(std::random_device{}()), distribution(0, 5) {
@@ -48,19 +39,6 @@ DiceFace Die::rollFace() {
 		return faces[roll];
 }
 
-void Die::displayFaces() const {
-	for (size_t i = 0; i < faces.size(); i++) {
-			if (faces[i].action == ATTACK) {
-					std::cout << "[ATTACK " << faces[i].value << "]";
-			} else if (faces[i].action == HEAL) {
-					std::cout << "[HEAL " << faces[i].value << "]";
-			} else if (faces[i].action == BLOCK) {
-					std::cout << "[BLOCK " << faces[i].value << "]";
-			} else {
-					std::cout << "[EMPTY]";
-			}
-			if (i < faces.size() - 1) {
-					std::cout << " ";
-			}
-	}
+const std::vector<DiceFace>& Die::getFaces() const {
+		return faces;
 }

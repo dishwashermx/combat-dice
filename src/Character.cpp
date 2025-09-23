@@ -1,8 +1,37 @@
 #include "Character.hpp"
+#include "Display.hpp"
 
 // ===== CONSTRUCTOR & DESTRUCTOR =====
 Character::Character(const std::string& name, int health, const std::vector<DiceFace>& customFaces, const std::string& team)
-: name(name), team(team), max_health(health), health(health), incoming_damage(0), shield(0), round_death(-1), die(customFaces) {}
+: name(name), team(team), max_health(health), health(health), incoming_damage(0), shield(0), round_death(-1), die(customFaces) {
+    // Validation checks
+    if (customFaces.size() != 6) {
+        std::cerr << "ERROR: Character '" << name << "' created with " << customFaces.size()
+                  << " faces instead of 6!" << std::endl;
+    }
+
+    if (health <= 0) {
+        std::cerr << "ERROR: Character '" << name << "' created with invalid health: " << health << std::endl;
+    }
+
+    // Validate dice faces
+    for (size_t i = 0; i < customFaces.size(); ++i) {
+        const auto& face = customFaces[i];
+        if (face.value < 0) {
+            std::cerr << "WARNING: Character '" << name << "' face " << i
+                      << " has negative value: " << face.value << std::endl;
+        }
+        if (face.action == ATTACK && face.value == 0) {
+            std::cerr << "WARNING: Character '" << name << "' has ATTACK with 0 damage on face " << i << std::endl;
+        }
+        if (face.action == HEAL && face.value == 0) {
+            std::cerr << "WARNING: Character '" << name << "' has HEAL with 0 healing on face " << i << std::endl;
+        }
+        if (face.action == BLOCK && face.value == 0) {
+            std::cerr << "WARNING: Character '" << name << "' has BLOCK with 0 shield on face " << i << std::endl;
+        }
+    }
+}
 
 
 // ===== CORE GAME METHODS =====
@@ -53,7 +82,8 @@ ActionResult Character::heal(int amount) {
     result.healingApplied = appliedHealing;
     result.newHealth = health;
     incoming_damage -= appliedHealing;
-    if (incoming_damage < 0) incoming_damage = 0;
+    if (incoming_damage < 0)
+			incoming_damage = 0;
 
     return result;
 }
@@ -115,7 +145,25 @@ void Character::resetShield() {
     shield = 0;
 }
 
+void Character::setMaxHealth(int newMaxHealth) {
+		max_health = newMaxHealth;
+}
+
+void Character::setHealth(int newHealth) {
+		health = newHealth;
+		if (health < 0)
+			health = 0;
+		if (health > max_health)
+			health = max_health;
+}
+
+void Character::setShield(int newShield) {
+		shield = newShield;
+		if (shield < 0)
+			shield = 0;
+}
+
 // ===== DISPLAY METHODS =====
 void Character::displayDie() const {
-    die.displayFaces();
+    Display::displayFaces(die.getFaces());
 }
