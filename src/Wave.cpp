@@ -64,13 +64,8 @@ void Wave::playRound() {
     for (auto& hero : game.heroes) {
         hero.resetShield();
         hero.setIncomingDamage(0);
-        // Reset dodge and stun status at start of round
-        if (hero.isDodging()) {
-            hero.resetDodge();
-        }
-        if (hero.isStunned()) {
-            hero.resetStun();
-        }
+        hero.resetDodge();
+				hero.resetStun();
         Display::showStatus(hero);
         std::cout << std::endl;
     }
@@ -78,18 +73,13 @@ void Wave::playRound() {
     for (auto& monster : game.monsters) {
         monster.resetShield();
         monster.setIncomingDamage(0);
-        // Reset dodge and stun status at start of round
-        if (monster.isDodging()) {
-            monster.resetDodge();
-        }
-        if (monster.isStunned()) {
-            monster.resetStun();
-        }
+        monster.resetDodge();
+        monster.resetStun();
         Display::showStatus(monster);
         std::cout << std::endl;
     }
 		std::cout << std::endl;
-    currentMonsterActions = monsterPhase(); // Store for later recalculation
+    currentMonsterActions = monsterPhase();
 		Input::pressEnterToContinue();
 		std::cout << std::endl;
     heroPhase();
@@ -158,8 +148,8 @@ void Wave::heroPhase() {
 
 						executeAction(action);
 
-						// If this was a dodge action, recalculate incoming damage immediately
-						if (roll.action == DODGE) {
+						// If this was a dodge or stun action, recalculate incoming damage immediately
+						if (roll.action == DODGE || roll.action == STUN) {
 							recalculateIncomingDamage(currentMonsterActions);
 						}
 				}
@@ -312,8 +302,11 @@ void Wave::executeAction(CombatAction action) {
                 break;
 
             case STUN:
-                result = target->stun();
-                Display::showActionResult(individualAction, result);
+                result = target->stun(actor->getHealth());
+                // Only display stun result if it was dodged or successful
+                if (result.wasDodged || result.wasStunned) {
+                    Display::showActionResult(individualAction, result);
+                }
                 break;
 
             case EMPTY:
@@ -340,8 +333,13 @@ void Wave::recalculateIncomingDamage(const std::vector<CombatAction>& monsterAct
 		for (const auto& action : monsterActions) {
 				if (action.roll.action == ATTACK && action.targetTeam == 0) { // Targeting heroes
 						if (action.targetIndex >= 0 && static_cast<size_t>(action.targetIndex) < game.heroes.size()) {
-								// Only add incoming damage if the target is not dodging
-								if (!game.heroes[action.targetIndex].isDodging()) {
+								// Only add incoming damage if target is not dodging AND actor is not stunned
+								bool targetDodging = game.heroes[action.targetIndex].isDodging();
+								bool actorStunned = (action.actorIndex >= 0 && static_cast<size_t>(action.actorIndex) < game.monsters.size())
+																		? game.monsters[action.actorIndex].isStunned()
+																		: false;
+
+								if (!targetDodging && !actorStunned) {
 									game.heroes[action.targetIndex].setIncomingDamage(game.heroes[action.targetIndex].getIncomingDamage() + action.roll.value);
 								}
 						}

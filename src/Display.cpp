@@ -96,7 +96,7 @@ void Display::showActionResult(const CombatAction& action, const ActionResult& r
 		return ;
 	}
 
-	if (action.roll.action != DODGE) {
+	if (action.roll.action != DODGE && action.roll.action != STUN) {
 		std::cout << Colors::GREEN << actorName << Colors::RESET << " ";
 
 		// Use description if available, otherwise fallback to actionToString + "s"
@@ -111,7 +111,7 @@ void Display::showActionResult(const CombatAction& action, const ActionResult& r
 			std::cout << " ";
 		}
 
-		// Don't show value for dodge actions
+		// Show value for attack, heal, block actions
 		std::cout << "for " << Colors::BOLD << actionValue << Colors::RESET;
 	}
 
@@ -139,12 +139,20 @@ void Display::showActionResult(const CombatAction& action, const ActionResult& r
 		std::cout << std::endl;
 		std::cout << Colors::YELLOW << actorName << " is ready to dodge!" << Colors::RESET << std::endl;
 	} else if (action.roll.action == STUN) {
-		std::cout << " stun!" << std::endl;
+		// Handle complete stun message
+		std::cout << Colors::GREEN << actorName << Colors::RESET << " ";
+		std::cout << Colors::BOLD << "stuns " << Colors::RESET;
+		if (!targetName.empty() && targetName != actorName) {
+			std::cout << Colors::RED << targetName << Colors::RESET;
+		}
+		std::cout << "!" << std::endl;
+
 		if (result.wasDodged) {
 			std::cout << Colors::YELLOW << targetName << " dodged the stun!" << Colors::RESET << std::endl;
 		} else if (result.wasStunned) {
 			std::cout << Colors::YELLOW << targetName << " is stunned!" << Colors::RESET << std::endl;
 		}
+		// No message when stun fails due to HP being too high - it simply doesn't connect
 	}
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 }

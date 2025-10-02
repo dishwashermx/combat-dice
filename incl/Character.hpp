@@ -52,7 +52,7 @@ class Character {
 			ActionResult heal(int amount);
 			ActionResult addShield(int amount);
 			ActionResult dodge();
-			ActionResult stun();
+			ActionResult stun(int actorHP);
 
 			// Getters
 			const std::string& getName() const;

@@ -110,16 +110,23 @@ ActionResult Character::dodge() {
 		return result;
 }
 
-ActionResult Character::stun() {
+ActionResult Character::stun(int actorHP) {
 		if (dodged) {
 			ActionResult result = {0, 0, 0, 0, 0, health, shield, health, shield, false, true};
 			// Don't reset dodge here - it should persist through the turn
 			return result;
 		}
 
-		ActionResult result = {0, 0, 0, 0, 0, health, shield, health, shield, true, false};
-		stunned = true;
-		return result;
+		// Stun connects when actor HP >= target HP
+		if (actorHP >= health) {
+			ActionResult result = {0, 0, 0, 0, 0, health, shield, health, shield, true, false};
+			stunned = true;
+			return result;
+		} else {
+			// Stun failed - actor HP too low
+			ActionResult result = {0, 0, 0, 0, 0, health, shield, health, shield, false, false};
+			return result;
+		}
 }
 
 bool Character::isAlive() const {
