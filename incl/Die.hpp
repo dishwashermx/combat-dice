@@ -29,47 +29,12 @@ struct DiceFace {
 		int value;         // how much
 		int marks;         // special properties (bitmask of Mark enum)
 
+		// Default constructor for containers
+		DiceFace() : name(""), desc(""), emoji(""), action(EMPTY), value(0), marks(NO_MARK) {}
+
 		// Full constructor with validation
 		DiceFace(std::string n, std::string d, std::string e, Action a, int v, int m = NO_MARK)
-		: name(n), desc(d), emoji(e), action(a), value(v), marks(m) {
-			// Runtime validation
-			if (value < 0) {
-				std::cerr << "Warning: DiceFace '" << name << "' has negative value: " << value << std::endl;
-			}
-			if (name.empty() && !desc.empty()) {
-				std::cerr << "Warning: DiceFace has description but no name" << std::endl;
-			}
-		}
-
-		// Simple constructor for legacy compatibility with validation
-		DiceFace(Action a, int v, int m = NO_MARK)
-		: name(""), desc(""), emoji(""), action(a), value(v), marks(m) {
-			// Runtime validation
-			if (v < 0) {
-				std::cerr << "Warning: DiceFace has negative value: " << v << std::endl;
-			}
-		}
-
-		// Deleted constructors to prevent common mistakes
-		DiceFace(Action a, int v, int m, int extra) = delete;  // Prevent 4-param calls
-		DiceFace(std::string n, Action a, int v) = delete;     // Prevent missing params
-
-		// Factory functions for safer construction
-		static DiceFace createAttack(const std::string& name, int damage, int marks = NO_MARK) {
-			return DiceFace(name, "attacks", "⚔️", ATTACK, damage, marks);
-		}
-
-		static DiceFace createBlock(const std::string& name, int shield, int marks = NO_MARK) {
-			return DiceFace(name, "blocks", "🛡️", BLOCK, shield, marks);
-		}
-
-		static DiceFace createHeal(const std::string& name, int healing, int marks = NO_MARK) {
-			return DiceFace(name, "heals", "💖", HEAL, healing, marks);
-		}
-
-		static DiceFace createEmpty() {
-			return DiceFace("Empty", "No action", "❌", EMPTY, 0, NO_MARK);
-		}
+		: name(n), desc(d), emoji(e), action(a), value(v), marks(m) {}
 };
 
 class Die {
@@ -77,8 +42,6 @@ private:
 		std::mt19937 generator;
 		std::uniform_int_distribution<int> distribution;
 		std::vector<DiceFace> faces;
-
-		void setupDefaultFaces();
 
 public:
 		Die();

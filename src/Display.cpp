@@ -55,18 +55,17 @@ void Display::showHeader(std::string type, int number) {
 }
 
 void Display::showIntent(const CombatAction& action) {
-    typeText(Colors::RED + action.actorName + Colors::RESET + " intends to ", 10);
 
-    if (action.roll.action == EMPTY) {
-        typeText(Colors::MAGENTA + "do nothing..." + Colors::RESET, 20);
-        return;
-    }
+	if (action.roll.action == EMPTY) {
+		return;
+	}
 
-    // Build the action string with colors
-    // Use description if available, otherwise fallback to actionToString
-    std::string actionText = action.roll.desc.empty() ?
-        Colors::BOLD + actionToString(action.roll.action) + Colors::RESET :
-        "use " + Colors::BOLD + action.roll.name + Colors::RESET + " on";
+		typeText(Colors::RED + action.actorName + Colors::RESET + " intends to ", 10);
+		// Build the action string with colors
+		// Use description if available, otherwise fallback to actionToString
+		std::string actionText = action.roll.desc.empty() ?
+				Colors::BOLD + actionToString(action.roll.action) + Colors::RESET :
+				"use " + Colors::BOLD + action.roll.name + Colors::RESET + " on";
 
 		// Add target with color based on team
     if (!action.targetName.empty() && action.targetTeam == 1)
@@ -94,41 +93,58 @@ void Display::showActionResult(const CombatAction& action, const ActionResult& r
 	std::string actionValue = std::to_string(action.roll.value);
 
 	if (action.roll.action == EMPTY) {
-		std::cout << Colors::MAGENTA << actorName << " does nothing..." << Colors::RESET << std::endl;
 		return ;
 	}
-	std::cout << Colors::GREEN << actorName << Colors::RESET << " ";
 
-	// Use description if available, otherwise fallback to actionToString + "s"
-	if (!action.roll.desc.empty()) {
-		std::cout << Colors::BOLD << action.roll.desc << Colors::RESET << " ";
-	} else {
-		std::cout << Colors::BOLD << actionToString(action.roll.action) << "s " << Colors::RESET;
+	if (action.roll.action != DODGE) {
+		std::cout << Colors::GREEN << actorName << Colors::RESET << " ";
+
+		// Use description if available, otherwise fallback to actionToString + "s"
+		if (!action.roll.desc.empty()) {
+			std::cout << Colors::BOLD << action.roll.desc << Colors::RESET << " ";
+		} else {
+			std::cout << Colors::BOLD << actionToString(action.roll.action) << "s " << Colors::RESET;
+		}
+
+		if (!targetName.empty() && targetName != actorName) {
+			std::cout << Colors::RED << targetName << Colors::RESET;
+			std::cout << " ";
+		}
+
+		// Don't show value for dodge actions
+		std::cout << "for " << Colors::BOLD << actionValue << Colors::RESET;
 	}
-
-	if (!targetName.empty() && targetName != actorName) {
-		std::cout << Colors::RED << targetName << Colors::RESET;
-		std::cout << " ";
-	}
-
-	std::cout << "for " << Colors::BOLD << actionValue << Colors::RESET;
 
 	if (action.roll.action == ATTACK) {
 		std::cout << " damage!" << std::endl;
-	if (result.damageBlocked > 0) {
-		std::cout << Colors::BLUE << targetName << "'s shield absorbed " << result.damageBlocked << " damage!" << Colors::RESET << std::endl;
-	}
-	if (result.damageDealt > 0) {
-		std::cout << Colors::RED << targetName << " took " << result.damageDealt << " damage!" << Colors::RESET << std::endl;
-		std::cout << targetName << " HP left: " << Colors::BOLD << result.newHealth << Colors::RESET << std::endl;
-	}
+		if (result.wasDodged) {
+			std::cout << Colors::YELLOW << targetName << " dodged the attack!" << Colors::RESET << std::endl;
+		} else {
+			if (result.damageBlocked > 0) {
+				std::cout << Colors::BLUE << targetName << " blocked " << result.damageBlocked << " damage!" << Colors::RESET << std::endl;
+			}
+			if (result.damageDealt > 0) {
+				std::cout << Colors::RED << targetName << " took " << result.damageDealt << " damage!" << Colors::RESET << std::endl;
+				std::cout << targetName << " HP left: " << Colors::BOLD << result.newHealth << Colors::RESET << std::endl;
+			}
+		}
 	} else if (action.roll.action == HEAL) {
-	std::cout << " HP!" << std::endl;
-	if (result.healingApplied > 0) {
-		std::cout << Colors::GREEN << targetName << " healed for " << result.healingApplied << " HP!" << Colors::RESET << std::endl;
-	}
+		std::cout << " HP!" << std::endl;
+		if (result.healingApplied > 0) {
+			std::cout << Colors::GREEN << targetName << " healed for " << result.healingApplied << " HP!" << Colors::RESET << std::endl;
+		}
 	} else if (action.roll.action == BLOCK) {
-			std::cout << " shield!" << std::endl;
+		std::cout << " shield!" << std::endl;
+	} else if (action.roll.action == DODGE) {
+		std::cout << std::endl;
+		std::cout << Colors::YELLOW << actorName << " is ready to dodge!" << Colors::RESET << std::endl;
+	} else if (action.roll.action == STUN) {
+		std::cout << " stun!" << std::endl;
+		if (result.wasDodged) {
+			std::cout << Colors::YELLOW << targetName << " dodged the stun!" << Colors::RESET << std::endl;
+		} else if (result.wasStunned) {
+			std::cout << Colors::YELLOW << targetName << " is stunned!" << Colors::RESET << std::endl;
+		}
 	}
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 }
@@ -199,24 +215,62 @@ DiceFace Display::animatedRoll(Character& character) {
     for (int i = 0; i < 10; ++i) {
         // Create temporary fake roll for animation with all required parameters
         DiceFace tempRoll(
-            static_cast<Action>(rand() % 4),  // Random action
+						" ",                             // Name placeholder
+						" ",                             // Description placeholder
+						" ",                             // Emoji placeholder
+            static_cast<Action>(rand() % 6),  // Random action (0-5 for all 6 actions)
             1 + (rand() % 6),                 // Random value 1-6
             NO_MARK                           // No marks for animation
         );
 
-        std::cout << "\r🎲 " << tempRoll.value << " ("
-                  << actionToString(tempRoll.action) << ")" << std::flush;
+        // Get proper emoji for animation
+        std::string emoji;
+        if (tempRoll.action == ATTACK) {
+            emoji = "⚔️";
+        } else if (tempRoll.action == HEAL) {
+            emoji = "❤️";
+        } else if (tempRoll.action == BLOCK) {
+            emoji = "🛡️";
+        } else if (tempRoll.action == DODGE) {
+            emoji = "💨";
+        } else if (tempRoll.action == STUN) {
+            emoji = "⚡";
+        } else {
+            emoji = "❌";
+        }
+
+        std::cout << "\r🎲  :: " << Colors::BOLD << tempRoll.value << " "
+									<< Colors::RESET << emoji << "  (" << Colors::YELLOW
+                  << actionToString(tempRoll.action) << Colors::RESET << ")"
+                  << std::flush;
         std::this_thread::sleep_for(std::chrono::milliseconds(90));
     }
 
     // Final actual roll (this is the one that counts)
     DiceFace finalRoll = character.roll();
 
+    // Get proper emoji for final roll
+    std::string finalEmoji;
+    if (finalRoll.action == ATTACK) {
+        finalEmoji = "⚔️";
+    } else if (finalRoll.action == HEAL) {
+        finalEmoji = "❤️";
+    } else if (finalRoll.action == BLOCK) {
+        finalEmoji = "🛡️";
+    } else if (finalRoll.action == DODGE) {
+        finalEmoji = "💨";
+    } else if (finalRoll.action == STUN) {
+        finalEmoji = "⚡";
+    } else if (finalRoll.action == EMPTY) {
+        finalEmoji = "❌";
+    } else {
+        finalEmoji = "✨";
+    }
     // Use the name if available, otherwise fallback to actionToString
     std::string rollName = finalRoll.name.empty() ? actionToString(finalRoll.action) : finalRoll.name;
 
-    std::cout << "\r🎲  " << Colors::BOLD << finalRoll.value
-              << Colors::RESET << " (" << Colors::YELLOW
+    std::cout << "\r🎲  :: " << Colors::BOLD << finalRoll.value << " "
+              << Colors::RESET << finalEmoji << "  (" << Colors::YELLOW
               << rollName << Colors::RESET << ")!"
               << std::endl;
 

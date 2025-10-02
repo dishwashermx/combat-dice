@@ -1,14 +1,12 @@
 #ifndef ACTION_LIBRARY_HPP
 #define ACTION_LIBRARY_HPP
 
-#include "../incl/Die.hpp"  // Adjust path as needed
+#include "Die.hpp
 #include <vector>
 #include <string>
 #include <unordered_map>
 
-/**
- * ActionTemplate - Represents a predefined action with metadata
- */
+
 struct ActionTemplate {
     std::string name;
     std::string description;

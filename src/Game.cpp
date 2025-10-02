@@ -5,7 +5,6 @@ Game::Game() : waveNumber{1} {}
 
 void Game::playGame() {
 	mainMenu();
-	partySetup();
 	while (waveNumber < 4 && anyHeroesAlive()) {
 		Wave wave(*this);
 		wave.setupWave();
@@ -22,14 +21,15 @@ void Game::playGame() {
 }
 
 void Game::mainMenu() {
-		Display::titleScreen();
-    Input::pressEnterToContinue("");
+		// Display::titleScreen();
+    // Input::pressEnterToContinue("");
+		partySetup();
 	return;
 }
 
 void Game::partySetup() {
+	heroes.push_back(CharacterFactory::createAssassin());
 	heroes.push_back(CharacterFactory::createKnight());
-	// heroes.push_back(CharacterFactory::createAssassin());
 }
 
 void Game::addMonster() {

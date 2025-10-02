@@ -25,6 +25,7 @@ class Wave {
 	private:
 		Game& game;
 		int round;
+		std::vector<CombatAction> currentMonsterActions; // Store monster actions for current round
 
 
 	public:
@@ -36,7 +37,7 @@ class Wave {
 		bool isRoundOver() const;
 		void heroPhase();
 		void executeAction(CombatAction action);
-		void recalculateIncomingDamage();
+		void recalculateIncomingDamage(const std::vector<CombatAction>& monsterActions);
 		std::vector<CombatAction> monsterPhase();
 		void resolveTurn(const std::vector<CombatAction>& monsterActions);
 		std::vector<Character*> getTargets(const CombatAction& action, Character* actor);

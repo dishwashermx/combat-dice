@@ -41,8 +41,14 @@ DiceFace Character::roll() {
 }
 
 ActionResult Character::takeDamage(int damage) {
+		if (dodged) {
+			ActionResult result = {0, 0, 0, 0, 0, health, shield, health, shield, false, true};
+			// Don't reset dodge here - it should persist through the turn
+			return result;
+		}
+
     int actualDamage = damage;
-    ActionResult result = {0, 0, 0, 0, 0, health, shield, health, shield};
+    ActionResult result = {0, 0, 0, 0, 0, health, shield, health, shield, false, false};
 
     if (shield > 0) {
         int blocked = std::min(shield, actualDamage);
@@ -68,7 +74,7 @@ ActionResult Character::takeDamage(int damage) {
 
 ActionResult Character::heal(int amount) {
     int appliedHealing = amount;
-    ActionResult result = {0, 0, 0, 0, 0, health, shield, health, shield};
+    ActionResult result = {0, 0, 0, 0, 0, health, shield, health, shield, false, false};
 
     if (health == max_health) {
         appliedHealing = 0; // No healing needed
@@ -89,13 +95,31 @@ ActionResult Character::heal(int amount) {
 }
 
 ActionResult Character::addShield(int amount) {
-    ActionResult result = {0, 0, 0, 0, 0, health, shield, health, shield};
+    ActionResult result = {0, 0, 0, 0, 0, health, shield, health, shield, false, false};
 
     shield += amount;
     result.shieldAdded = amount;
     result.newShield = shield;
 
     return result;
+}
+
+ActionResult Character::dodge() {
+		ActionResult result = {0, 0, 0, 0, 0, health, shield, health, shield, false, false};
+		dodged = true;
+		return result;
+}
+
+ActionResult Character::stun() {
+		if (dodged) {
+			ActionResult result = {0, 0, 0, 0, 0, health, shield, health, shield, false, true};
+			// Don't reset dodge here - it should persist through the turn
+			return result;
+		}
+
+		ActionResult result = {0, 0, 0, 0, 0, health, shield, health, shield, true, false};
+		stunned = true;
+		return result;
 }
 
 bool Character::isAlive() const {
@@ -131,6 +155,14 @@ int Character::getRoundOfDeath() const {
     return round_death;
 }
 
+bool Character::isStunned() const {
+    return stunned;
+}
+
+bool Character::isDodging() const {
+    return dodged;
+}
+
 // ===== SETTERS =====
 int Character::setIncomingDamage(int damage) {
     incoming_damage = damage;
@@ -143,6 +175,14 @@ void Character::setRoundOfDeath(int round) {
 
 void Character::resetShield() {
     shield = 0;
+}
+
+void Character::resetDodge() {
+    dodged = false;
+}
+
+void Character::resetStun() {
+    stunned = false;
 }
 
 void Character::setMaxHealth(int newMaxHealth) {

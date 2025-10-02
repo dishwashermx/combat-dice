@@ -23,6 +23,10 @@ struct ActionResult {
     int newShield;
     int oldHealth;
     int oldShield;
+
+		// Stun-specific
+		bool wasStunned;
+		bool wasDodged;
 };
 
 class Character {
@@ -34,6 +38,8 @@ class Character {
 			int incoming_damage;
 			int shield;
 			int round_death; // Track the round in which the character died
+			bool dodged; // Track if the character dodged this round
+			bool stunned; // Track if the character is stunned this round
 			Die die;
 
 	public:
@@ -45,6 +51,8 @@ class Character {
 			ActionResult takeDamage(int damage);
 			ActionResult heal(int amount);
 			ActionResult addShield(int amount);
+			ActionResult dodge();
+			ActionResult stun();
 
 			// Getters
 			const std::string& getName() const;
@@ -54,6 +62,8 @@ class Character {
 			int getShield() const;
 			const std::string& getTeam() const;
 			int getRoundOfDeath() const;
+			bool isStunned() const;
+			bool isDodging() const;
 
 			// Setters
 			void setRoundOfDeath(int round);
@@ -64,6 +74,8 @@ class Character {
 
 			// Utility
 			void resetShield();
+			void resetDodge();
+			void resetStun();
 			bool isAlive() const;
 			void displayDie() const;
 			void displayTeamInfo(const Character& character);

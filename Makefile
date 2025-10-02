@@ -4,7 +4,7 @@ INCDIR = incl
 OBJDIR = obj
 
 # Core source files (stays same)
-SRC = main.cpp Game.cpp Die.cpp Display.cpp Input.cpp CharacterFactory.cpp Character.cpp Wave.cpp
+SRC = main.cpp Game.cpp Die.cpp Display.cpp Input.cpp CharacterFactory.cpp Character.cpp Wave.cpp ActionLibrary.cpp
 
 # Build rules
 SRCFILES = $(addprefix $(SRCDIR)/, $(SRC))

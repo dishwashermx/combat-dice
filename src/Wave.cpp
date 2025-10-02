@@ -8,7 +8,7 @@ void Wave::setupWave() {
 	switch (game.waveNumber) {
 		case 1:
 			game.monsters.push_back(CharacterFactory::createGoblin());
-			game.monsters.push_back(CharacterFactory::createGoblin());
+			// game.monsters.push_back(CharacterFactory::createGoblin());
 			break;
 		case 2:
 			game.monsters.push_back(CharacterFactory::createGoblin());
@@ -64,22 +64,38 @@ void Wave::playRound() {
     for (auto& hero : game.heroes) {
         hero.resetShield();
         hero.setIncomingDamage(0);
-				Display::showStatus(hero);
-				std::cout << std::endl;
-			}
-		std::cout << std::endl;
+        // Reset dodge and stun status at start of round
+        if (hero.isDodging()) {
+            hero.resetDodge();
+        }
+        if (hero.isStunned()) {
+            hero.resetStun();
+        }
+        Display::showStatus(hero);
+        std::cout << std::endl;
+    }
+    std::cout << std::endl;
     for (auto& monster : game.monsters) {
         monster.resetShield();
         monster.setIncomingDamage(0);
-				Display::showStatus(monster);
-				std::cout << std::endl;
+        // Reset dodge and stun status at start of round
+        if (monster.isDodging()) {
+            monster.resetDodge();
+        }
+        if (monster.isStunned()) {
+            monster.resetStun();
+        }
+        Display::showStatus(monster);
+        std::cout << std::endl;
     }
 		std::cout << std::endl;
-    std::vector<CombatAction> monsterRolls = monsterPhase();
+    currentMonsterActions = monsterPhase(); // Store for later recalculation
 		Input::pressEnterToContinue();
 		std::cout << std::endl;
     heroPhase();
-    resolveTurn(monsterRolls);
+    // Recalculate incoming damage after heroes have had chance to dodge
+    recalculateIncomingDamage(currentMonsterActions);
+    resolveTurn(currentMonsterActions);
 
     round++;
 }
@@ -132,12 +148,21 @@ void Wave::heroPhase() {
                     action = CombatAction(roll, game.heroes[i].getName(), i, 1, game.heroes[targetChoice].getName(), targetChoice, 1);
                 }
             }
-            else { // EMPTY or other actions
-                action = CombatAction(roll, game.heroes[i].getName(), i, 0, "", -1, 0);
+            else if (roll.action == DODGE) {
+                // Dodge - always self-target, no selection needed
+                action = CombatAction(roll, game.heroes[i].getName(), i, 1, game.heroes[i].getName(), i, 1);
             }
+						else { // EMPTY or other actions
+								action = CombatAction(roll, game.heroes[i].getName(), i, 1, "", -1, 0);
+						}
 
-            executeAction(action);
-        }
+						executeAction(action);
+
+						// If this was a dodge action, recalculate incoming damage immediately
+						if (roll.action == DODGE) {
+							recalculateIncomingDamage(currentMonsterActions);
+						}
+				}
     }
     return;
 }
@@ -155,8 +180,8 @@ std::vector<Character*> Wave::getTargets(const CombatAction& action, Character*)
         } else { // Monster targeting heroes
             targetTeam = &game.heroes;
         }
-    } else if (action.roll.action == HEAL || action.roll.action == BLOCK) {
-        // Defensive/support actions target allies
+    } else if (action.roll.action == HEAL || action.roll.action == BLOCK || action.roll.action == DODGE) {
+        // Defensive/support actions target allies (including dodge on self)
         if (action.targetTeam == 1) { // Hero targeting heroes
             targetTeam = &game.heroes;
         } else { // Monster targeting monsters
@@ -231,6 +256,11 @@ void Wave::executeAction(CombatAction action) {
 
     if (!actor || !actor->isAlive()) return;
 
+    // Skip action entirely if actor is stunned
+    if (actor->isStunned()) {
+        return;
+    }
+
     // Get targets based on target type
     std::vector<Character*> targets = getTargets(action, actor);
 
@@ -277,19 +307,17 @@ void Wave::executeAction(CombatAction action) {
                 break;
 
             case DODGE:
-                // TODO: Implement dodge mechanics
-                result = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+                result = target->dodge();
                 Display::showActionResult(individualAction, result);
                 break;
 
             case STUN:
-                // TODO: Implement stun mechanics
-                result = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+                result = target->stun();
                 Display::showActionResult(individualAction, result);
                 break;
 
             case EMPTY:
-                result = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+                result = {0, 0, 0, 0, 0, 0, 0, 0, 0, false, false};
                 Display::showActionResult(individualAction, result);
                 break;
         }
@@ -301,20 +329,21 @@ void Wave::executeAction(CombatAction action) {
         if (!monster.isAlive() && monster.getRoundOfDeath() != -1) {
             monster.setRoundOfDeath(round);
         }
-        if (monster.getRoundOfDeath() == round) {
-            recalculateIncomingDamage();
-        }
+        // Note: incoming damage will be recalculated after hero phase
     }
 }
 
-void Wave::recalculateIncomingDamage() {
+void Wave::recalculateIncomingDamage(const std::vector<CombatAction>& monsterActions) {
 		for (auto& hero : game.heroes) {
 				hero.setIncomingDamage(0);
 		}
-		for (const auto& action : monsterPhase()) {
+		for (const auto& action : monsterActions) {
 				if (action.roll.action == ATTACK && action.targetTeam == 0) { // Targeting heroes
 						if (action.targetIndex >= 0 && static_cast<size_t>(action.targetIndex) < game.heroes.size()) {
-								game.heroes[action.targetIndex].setIncomingDamage(game.heroes[action.targetIndex].getIncomingDamage() + action.roll.value);
+								// Only add incoming damage if the target is not dodging
+								if (!game.heroes[action.targetIndex].isDodging()) {
+									game.heroes[action.targetIndex].setIncomingDamage(game.heroes[action.targetIndex].getIncomingDamage() + action.roll.value);
+								}
 						}
 				}
 		}
@@ -349,8 +378,8 @@ std::vector<CombatAction> Wave::monsterPhase() {
                         int targetIndex = aliveHeroes[randomIndex];
                         action = CombatAction(roll, game.monsters[i].getName(), i, -1, game.heroes[targetIndex].getName(), targetIndex, 1);
 
-                        // For damage prediction
-                        if (roll.action == ATTACK) {
+                        // For damage prediction - only if target is not dodging
+                        if (roll.action == ATTACK && !game.heroes[targetIndex].isDodging()) {
                             game.heroes[targetIndex].setIncomingDamage(
                                 game.heroes[targetIndex].getIncomingDamage() + roll.value);
                         }
@@ -381,7 +410,7 @@ std::vector<CombatAction> Wave::monsterPhase() {
                     }
                 }
             } else { // EMPTY or other actions
-                action = CombatAction(DiceFace(EMPTY, 0), game.monsters[i].getName(), i, -1, "", -1, 0);
+                action = CombatAction(DiceFace(), game.monsters[i].getName(), i, -1, "", -1, 0);
             }
 
             Display::showIntent(action);
@@ -389,7 +418,7 @@ std::vector<CombatAction> Wave::monsterPhase() {
             actions.push_back(action);
         }
         else {
-            actions.push_back(CombatAction(DiceFace(EMPTY, 0), game.monsters[i].getName(), i, 1, "", -1, 0)); // No action for dead monsters
+            actions.push_back(CombatAction(DiceFace(), game.monsters[i].getName(), i, 1, "", -1, 0)); // No action for dead monsters
         }
     }
     std::cout << std::endl;

@@ -7,7 +7,7 @@
 namespace CharacterFactory {
 	// Heroes
 	Character createKnight();
-	// Character createAssassin();
+	Character createAssassin();
 
 	// Monsters
 	Character createGoblin();
