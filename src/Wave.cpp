@@ -8,7 +8,7 @@ void Wave::setupWave() {
 	switch (game.waveNumber) {
 		case 1:
 			game.monsters.push_back(CharacterFactory::createGoblin());
-			// game.monsters.push_back(CharacterFactory::createGoblin());
+			game.monsters.push_back(CharacterFactory::createGoblin());
 			break;
 		case 2:
 			game.monsters.push_back(CharacterFactory::createGoblin());
@@ -331,7 +331,7 @@ void Wave::recalculateIncomingDamage(const std::vector<CombatAction>& monsterAct
 				hero.setIncomingDamage(0);
 		}
 		for (const auto& action : monsterActions) {
-				if (action.roll.action == ATTACK && action.targetTeam == 0) { // Targeting heroes
+				if (action.roll.action == ATTACK && action.targetTeam == 1) { // Targeting heroes
 						if (action.targetIndex >= 0 && static_cast<size_t>(action.targetIndex) < game.heroes.size()) {
 								// Only add incoming damage if target is not dodging AND actor is not stunned
 								bool targetDodging = game.heroes[action.targetIndex].isDodging();
