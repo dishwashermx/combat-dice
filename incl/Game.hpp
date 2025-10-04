@@ -24,13 +24,11 @@ class Game {
 				void mainMenu();
 
 				// Character management
-				void addHero();
 				void addMonster();
 
 				// Game state
 				bool anyHeroesAlive() const;
 				bool anyMonstersAlive() const;
-				bool isRoundOver() const;
 				Character& getRandomAliveHero();
 
 				// Battle

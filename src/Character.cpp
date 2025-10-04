@@ -4,7 +4,9 @@
 // ===== CONSTRUCTOR & DESTRUCTOR =====
 Character::Character(const std::string& name, int health, const std::vector<DiceFace>& customFaces, const std::string& team)
 : name(name), team(team), max_health(health), health(health), incoming_damage(0), shield(0), round_death(-1), die(customFaces) {
-    // Validation checks
+
+#ifdef DEBUG
+    // Validation checks (only in debug builds)
     if (customFaces.size() != 6) {
         std::cerr << "ERROR: Character '" << name << "' created with " << customFaces.size()
                   << " faces instead of 6!" << std::endl;
@@ -14,23 +16,17 @@ Character::Character(const std::string& name, int health, const std::vector<Dice
         std::cerr << "ERROR: Character '" << name << "' created with invalid health: " << health << std::endl;
     }
 
-    // Validate dice faces
-    for (size_t i = 0; i < customFaces.size(); ++i) {
-        const auto& face = customFaces[i];
+    // Validate dice faces efficiently
+    for (const auto& face : customFaces) {
         if (face.value < 0) {
-            std::cerr << "WARNING: Character '" << name << "' face " << i
-                      << " has negative value: " << face.value << std::endl;
+            std::cerr << "WARNING: Character '" << name << "' has negative face value: " << face.value << std::endl;
         }
-        if (face.action == ATTACK && face.value == 0) {
-            std::cerr << "WARNING: Character '" << name << "' has ATTACK with 0 damage on face " << i << std::endl;
-        }
-        if (face.action == HEAL && face.value == 0) {
-            std::cerr << "WARNING: Character '" << name << "' has HEAL with 0 healing on face " << i << std::endl;
-        }
-        if (face.action == BLOCK && face.value == 0) {
-            std::cerr << "WARNING: Character '" << name << "' has BLOCK with 0 shield on face " << i << std::endl;
+        if ((face.action == ATTACK || face.action == HEAL || face.action == BLOCK) && face.value == 0) {
+            std::cerr << "WARNING: Character '" << name << "' has " << actionToString(face.action)
+                      << " with 0 value" << std::endl;
         }
     }
+#endif
 }
 
 
@@ -113,7 +109,6 @@ ActionResult Character::dodge() {
 ActionResult Character::stun(int actorHP) {
 		if (dodged) {
 			ActionResult result = {0, 0, 0, 0, 0, health, shield, health, shield, false, true};
-			// Don't reset dodge here - it should persist through the turn
 			return result;
 		}
 
@@ -123,7 +118,6 @@ ActionResult Character::stun(int actorHP) {
 			stunned = true;
 			return result;
 		} else {
-			// Stun failed - actor HP too low
 			ActionResult result = {0, 0, 0, 0, 0, health, shield, health, shield, false, false};
 			return result;
 		}

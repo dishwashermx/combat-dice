@@ -92,7 +92,6 @@ namespace Colors {
 
 			// Utility
 			static void clearScreen();
-			static void pressEnterToContinue();
 			static void clearLines(int numLines);
 			static std::string marksToEmoji(int marks);
 

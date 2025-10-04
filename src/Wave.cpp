@@ -27,25 +27,33 @@ void Wave::setupWave() {
 
 void Wave::playWave() {
 	Display::showWaveHeader(game.waveNumber);
+
+	// Helper lambda for character setup and display
+	auto setupCharacter = [](Character& character, bool isHero) {
+		character.resetShield();
+		character.setIncomingDamage(0);
+		if (isHero) {
+			if (character.isAlive())
+				character.setHealth(character.getMaxHealth());
+			else
+				character.setHealth(character.getMaxHealth()/2); // Revive with half health
+		}
+	};
+
 	std::cout << "HEROES" << std::endl;
 	for (auto& hero : game.heroes) {
-		hero.resetShield();
-		hero.setIncomingDamage(0);
-		if (hero.isAlive())
-			hero.setHealth(hero.getMaxHealth());
-		else
-			hero.setHealth(hero.getMaxHealth()/2); // Revive with half health
+		setupCharacter(hero, true);
 		Display::showStatus(hero);
 		std::cout << std::endl;
 		hero.displayDie();
 		std::cout << std::endl;
 	}
 	std::cout << std::endl;
+
 	std::cout << "MONSTERS" << std::endl;
 	for (auto& monster : game.monsters) {
 		if (monster.isAlive()) {
-			monster.resetShield();
-			monster.setIncomingDamage(0);
+			setupCharacter(monster, false);
 			Display::showStatus(monster);
 			std::cout << std::endl;
 			monster.displayDie();
@@ -61,22 +69,22 @@ void Wave::playWave() {
 void Wave::playRound() {
     Display::showRoundHeader(round);
 
-    for (auto& hero : game.heroes) {
-        hero.resetShield();
-        hero.setIncomingDamage(0);
-        hero.resetDodge();
-				hero.resetStun();
-        Display::showStatus(hero);
+    // Reset all characters and display status
+    auto resetAndShowCharacter = [](Character& character) {
+        character.resetShield();
+        character.setIncomingDamage(0);
+        character.resetDodge();
+        character.resetStun();
+        Display::showStatus(character);
         std::cout << std::endl;
+    };
+
+    for (auto& hero : game.heroes) {
+        resetAndShowCharacter(hero);
     }
     std::cout << std::endl;
     for (auto& monster : game.monsters) {
-        monster.resetShield();
-        monster.setIncomingDamage(0);
-        monster.resetDodge();
-        monster.resetStun();
-        Display::showStatus(monster);
-        std::cout << std::endl;
+        resetAndShowCharacter(monster);
     }
 		std::cout << std::endl;
     currentMonsterActions = monsterPhase();
@@ -327,23 +335,29 @@ void Wave::executeAction(CombatAction action) {
 }
 
 void Wave::recalculateIncomingDamage(const std::vector<CombatAction>& monsterActions) {
+		// Reset all hero incoming damage
 		for (auto& hero : game.heroes) {
 				hero.setIncomingDamage(0);
 		}
-		for (const auto& action : monsterActions) {
-				if (action.roll.action == ATTACK && action.targetTeam == 1) { // Targeting heroes
-						if (action.targetIndex >= 0 && static_cast<size_t>(action.targetIndex) < game.heroes.size()) {
-								// Only add incoming damage if target is not dodging AND actor is not stunned
-								bool targetDodging = game.heroes[action.targetIndex].isDodging();
-								bool actorStunned = (action.actorIndex >= 0 && static_cast<size_t>(action.actorIndex) < game.monsters.size())
-																		? game.monsters[action.actorIndex].isStunned()
-																		: false;
 
-								if (!targetDodging && !actorStunned) {
-									game.heroes[action.targetIndex].setIncomingDamage(game.heroes[action.targetIndex].getIncomingDamage() + action.roll.value);
-								}
-						}
+		// Process monster attacks efficiently
+		for (const auto& action : monsterActions) {
+				if (action.roll.action != ATTACK || action.targetTeam != 1) continue; // Skip non-attacks or non-hero targets
+
+				// Bounds check once
+				if (action.targetIndex < 0 || action.targetIndex >= static_cast<int>(game.heroes.size()) ||
+				    action.actorIndex < 0 || action.actorIndex >= static_cast<int>(game.monsters.size())) {
+						continue;
 				}
+
+				// Check conditions once
+				if (game.heroes[action.targetIndex].isDodging() || game.monsters[action.actorIndex].isStunned()) {
+						continue;
+				}
+
+				// Apply damage
+				auto& targetHero = game.heroes[action.targetIndex];
+				targetHero.setIncomingDamage(targetHero.getIncomingDamage() + action.roll.value);
 		}
 }
 
@@ -365,21 +379,23 @@ std::vector<CombatAction> Wave::monsterPhase() {
                 } else {
                     // Single/adjacent target needed - pick random hero
                     std::vector<int> aliveHeroes;
+                    aliveHeroes.reserve(game.heroes.size()); // Reserve space to avoid reallocations
                     for (size_t j = 0; j < game.heroes.size(); ++j) {
                         if (game.heroes[j].isAlive()) {
-                            aliveHeroes.push_back(j);
+                            aliveHeroes.push_back(static_cast<int>(j));
                         }
                     }
 
                     if (!aliveHeroes.empty()) {
-                        int randomIndex = game.generator() % aliveHeroes.size();
-                        int targetIndex = aliveHeroes[randomIndex];
-                        action = CombatAction(roll, game.monsters[i].getName(), i, -1, game.heroes[targetIndex].getName(), targetIndex, 1);
+                        const int randomIndex = game.generator() % aliveHeroes.size();
+                        const int targetIndex = aliveHeroes[randomIndex];
+                        const auto& targetHero = game.heroes[targetIndex];
+                        action = CombatAction(roll, game.monsters[i].getName(), i, -1, targetHero.getName(), targetIndex, 1);
 
                         // For damage prediction - only if target is not dodging
-                        if (roll.action == ATTACK && !game.heroes[targetIndex].isDodging()) {
+                        if (roll.action == ATTACK && !targetHero.isDodging()) {
                             game.heroes[targetIndex].setIncomingDamage(
-                                game.heroes[targetIndex].getIncomingDamage() + roll.value);
+                                targetHero.getIncomingDamage() + roll.value);
                         }
                     } else {
                         action = CombatAction(roll, game.monsters[i].getName(), i, -1, "", -1, 0);

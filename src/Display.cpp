@@ -45,9 +45,9 @@ void Display::showHeader(std::string type, int number) {
     }
 
 		// Finally, print the complete settled line
-		std::cout << "\r" << Colors::BOLD << Colors::CYAN << prefix << Colors::RESET;
-		std::cout << Colors::BOLD << Colors::YELLOW << headerString << Colors::RESET;
-		std::cout << Colors::BOLD << Colors::CYAN << suffix << Colors::RESET;
+		std::cout << "\r" << Colors::BOLD << Colors::CYAN << prefix << Colors::RESET
+		          << Colors::BOLD << Colors::YELLOW << headerString << Colors::RESET
+		          << Colors::BOLD << Colors::CYAN << suffix << Colors::RESET;
 		std::cout << std::flush << std::endl;
 
     // Brief pause before continuing
@@ -97,55 +97,56 @@ void Display::showActionResult(const CombatAction& action, const ActionResult& r
 	}
 
 	if (action.roll.action != DODGE && action.roll.action != STUN) {
-		std::cout << Colors::GREEN << actorName << Colors::RESET << " ";
+		std::string output = Colors::GREEN + actorName + Colors::RESET + " ";
 
 		// Use description if available, otherwise fallback to actionToString + "s"
 		if (!action.roll.desc.empty()) {
-			std::cout << Colors::BOLD << action.roll.desc << Colors::RESET << " ";
+			output += Colors::BOLD + action.roll.desc + Colors::RESET + " ";
 		} else {
-			std::cout << Colors::BOLD << actionToString(action.roll.action) << "s " << Colors::RESET;
+			output += Colors::BOLD + actionToString(action.roll.action) + "s " + Colors::RESET;
 		}
 
 		if (!targetName.empty() && targetName != actorName) {
-			std::cout << Colors::RED << targetName << Colors::RESET;
-			std::cout << " ";
+			output += Colors::RED + targetName + Colors::RESET + " ";
 		}
 
 		// Show value for attack, heal, block actions
-		std::cout << "for " << Colors::BOLD << actionValue << Colors::RESET;
+		output += "for " + Colors::BOLD + actionValue + Colors::RESET;
+		std::cout << output;
 	}
-
+ 
 	if (action.roll.action == ATTACK) {
-		std::cout << " damage!" << std::endl;
+		std::string attackOutput = " damage!\n";
 		if (result.wasDodged) {
-			std::cout << Colors::YELLOW << targetName << " dodged the attack!" << Colors::RESET << std::endl;
+			attackOutput += Colors::YELLOW + targetName + " dodged the attack!" + Colors::RESET + "\n";
 		} else {
 			if (result.damageBlocked > 0) {
-				std::cout << Colors::BLUE << targetName << " blocked " << result.damageBlocked << " damage!" << Colors::RESET << std::endl;
+				attackOutput += Colors::BLUE + targetName + " blocked " + std::to_string(result.damageBlocked) + " damage!" + Colors::RESET + "\n";
 			}
 			if (result.damageDealt > 0) {
-				std::cout << Colors::RED << targetName << " took " << result.damageDealt << " damage!" << Colors::RESET << std::endl;
-				std::cout << targetName << " HP left: " << Colors::BOLD << result.newHealth << Colors::RESET << std::endl;
+				attackOutput += Colors::RED + targetName + " took " + std::to_string(result.damageDealt) + " damage!" + Colors::RESET + "\n";
+				attackOutput += targetName + " HP left: " + Colors::BOLD + std::to_string(result.newHealth) + Colors::RESET + "\n";
 			}
 		}
+		std::cout << attackOutput;
 	} else if (action.roll.action == HEAL) {
-		std::cout << " HP!" << std::endl;
+		std::string healOutput = " HP!\n";
 		if (result.healingApplied > 0) {
-			std::cout << Colors::GREEN << targetName << " healed for " << result.healingApplied << " HP!" << Colors::RESET << std::endl;
+			healOutput += Colors::GREEN + targetName + " healed for " + std::to_string(result.healingApplied) + " HP!" + Colors::RESET + "\n";
 		}
+		std::cout << healOutput;
 	} else if (action.roll.action == BLOCK) {
-		std::cout << " shield!" << std::endl;
+		std::cout << " shield!\n";
 	} else if (action.roll.action == DODGE) {
-		std::cout << std::endl;
-		std::cout << Colors::YELLOW << actorName << " is ready to dodge!" << Colors::RESET << std::endl;
+		std::cout << "\n" << Colors::YELLOW << actorName << " is ready to dodge!" << Colors::RESET << "\n";
 	} else if (action.roll.action == STUN) {
 		// Handle complete stun message
-		std::cout << Colors::GREEN << actorName << Colors::RESET << " ";
-		std::cout << Colors::BOLD << "stuns " << Colors::RESET;
+		std::string stunOutput = Colors::GREEN + actorName + Colors::RESET + " " + Colors::BOLD + "stuns " + Colors::RESET;
 		if (!targetName.empty() && targetName != actorName) {
-			std::cout << Colors::RED << targetName << Colors::RESET;
+			stunOutput += Colors::RED + targetName + Colors::RESET;
 		}
-		std::cout << "!" << std::endl;
+		stunOutput += "!\n";
+		std::cout << stunOutput;
 
 		if (result.wasDodged) {
 			std::cout << Colors::YELLOW << targetName << " dodged the stun!" << Colors::RESET << std::endl;
@@ -157,52 +158,52 @@ void Display::showActionResult(const CombatAction& action, const ActionResult& r
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 }
 
-		void Display::clearScreen() {
-			#ifdef _WIN32
-			system("cls");
-			#else
-			system("clear");
-			#endif
+void Display::clearScreen() {
+	#ifdef _WIN32
+	system("cls");
+	#else
+	system("clear");
+	#endif
+}
+
+void Display::showGameOver(bool heroesWin) {
+	if (heroesWin) {
+		std::cout << Colors::GREEN << Colors::BOLD << "🎉 HEROES WIN! 🎉" << Colors::RESET << std::endl;
+	} else {
+		std::cout << Colors::RED << Colors::BOLD << "💀 MONSTERS WIN! 💀" << Colors::RESET << std::endl;
+	}
+}
+
+void Display::clearLines(int numLines) {
+	for (int i = 0; i < numLines; ++i) {
+		std::cout << "\033[A";  // Move cursor up one line
+		std::cout << "\033[K";  // Clear line
+	}
+}
+
+void Display::typeText(const std::string& text, int delayMs) {
+	bool inColorCode = false;
+
+	for (size_t i = 0; i < text.length(); ++i) {
+		char c = text[i];
+
+		// Detect color escape sequences
+		if (c == '\033') {
+			inColorCode = true;
 		}
 
-		void Display::showGameOver(bool heroesWin) {
-			if (heroesWin) {
-				std::cout << Colors::GREEN << Colors::BOLD << "🎉 HEROES WIN! 🎉" << Colors::RESET << std::endl;
-			} else {
-				std::cout << Colors::RED << Colors::BOLD << "💀 MONSTERS WIN! 💀" << Colors::RESET << std::endl;
-			}
+		std::cout << c << std::flush;
+
+		// Only delay on visible characters (not color codes)
+		if (!inColorCode) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(delayMs));
 		}
 
-		void Display::clearLines(int numLines) {
-			for (int i = 0; i < numLines; ++i) {
-				std::cout << "\033[A";  // Move cursor up one line
-        std::cout << "\033[K";  // Clear line
-			}
+		// End of color code
+		if (inColorCode && c == 'm') {
+			inColorCode = false;
 		}
-
-		void Display::typeText(const std::string& text, int delayMs) {
-			bool inColorCode = false;
-
-			for (size_t i = 0; i < text.length(); ++i) {
-				char c = text[i];
-
-        // Detect color escape sequences
-        if (c == '\033') {
-					inColorCode = true;
-        }
-
-        std::cout << c << std::flush;
-
-        // Only delay on visible characters (not color codes)
-        if (!inColorCode) {
-					std::this_thread::sleep_for(std::chrono::milliseconds(delayMs));
-        }
-
-        // End of color code
-        if (inColorCode && c == 'm') {
-					inColorCode = false;
-        }
-    }
+	}
 }
 
 void Display::blinkText(const std::string& text, int blinks) {
