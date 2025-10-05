@@ -28,7 +28,7 @@ void Game::mainMenu() {
 }
 
 void Game::partySetup() {
-	heroes.push_back(CharacterFactory::createAssassin());
+	heroes.push_back(CharacterFactory::createTestBot());
 	heroes.push_back(CharacterFactory::createKnight());
 }
 

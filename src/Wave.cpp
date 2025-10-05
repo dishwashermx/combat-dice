@@ -9,10 +9,7 @@ void Wave::setupWave() {
 		case 1:
 			game.monsters.push_back(CharacterFactory::createGoblin());
 			game.monsters.push_back(CharacterFactory::createGoblin());
-			game.monsters.push_back(CharacterFactory::createGoblin());
-			game.monsters.push_back(CharacterFactory::createGoblin());
-			game.monsters.push_back(CharacterFactory::createGoblin());
-			game.monsters.push_back(CharacterFactory::createGoblin());
+
 			break;
 		case 2:
 			game.monsters.push_back(CharacterFactory::createGoblin());
@@ -315,7 +312,6 @@ void Wave::executeAction(CombatAction action) {
 
             case STUN:
                 result = target->stun(actor->getHealth());
-                // Only display stun result if it was dodged or successful
                 if (result.wasDodged || result.wasStunned) {
                     Display::showActionResult(individualAction, result);
                 }
@@ -344,7 +340,7 @@ void Wave::recalculateIncomingDamage(const std::vector<CombatAction>& monsterAct
 				hero.setIncomingDamage(0);
 		}
 
-		// Process monster attacks efficiently
+		// Process monster attacks
 		for (const auto& action : monsterActions) {
 				if (action.roll.action != ATTACK || action.targetTeam != 1) continue; // Skip non-attacks or non-hero targets
 

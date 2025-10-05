@@ -9,23 +9,35 @@ void ActionLibrary::initialize() {
 	if (initialized)
 		return;
 
-	// === ATTACK ACTIONS ===
-	actions["unarmed-strike"] = DiceFace("Unarmed Strike", "punches", "🤜", ATTACK, 1);
-	actions["claw-attack"] = DiceFace("Claw Attack", "scratches", "␥", ATTACK, 2);
-	actions["sword-slash"] = DiceFace("Sword Slash", "slashes", "🗡️", ATTACK, 2);
-	actions["dagger"] = DiceFace("Dagger", "stabs", "🗡️", ATTACK, 1);
-	actions["backstab"] = DiceFace("Backstab", "backstabs", "🗡️", ATTACK, 4);
+	// === UNARMED ACTIONS ===
+	actions["quick-jab"] = DiceFace("Quick Jab", "jabs", "👊", ATTACK, 1);
+	actions["power-cross"] = DiceFace("Power Cross", "crosses", "👊", ATTACK, 2);
+	actions["uppercut"] = DiceFace("Uppercut", "uppercuts", "✊", ATTACK, 3);
+	actions["roundhouse"] = DiceFace("Roundhouse", "roundhouses", "🦵", ATTACK, 1, SPLASH);
+	actions["front-kick"] = DiceFace("Front Kick", "kicks", "🦵", ATTACK, 2);
+	actions["brace"] = DiceFace("Brace", "braces", "🛡️", BLOCK, 1);
+	actions["duck"] = DiceFace("Duck", "ducks", "🦆", DODGE, 0);
+	actions["sidestep"] = DiceFace("Sidestep", "sidesteps", "↔️", DODGE, 0);
+	actions["rest"] = DiceFace("Rest", "rests", "😴", HEAL, 1);
+	actions["focus"] = DiceFace("Focus", "focuses", "🎯", HEAL, 2);
 
-	// === BLOCK ACTIONS ===
-	actions["raise-arms"] = DiceFace("Raise Arms", "blocks", "🫸", BLOCK, 1);
-	actions["buckler"] = DiceFace("Buckler", "shields", "🛡️", BLOCK, 2);
+	// === WEAPON ACTIONS ===
+	// Melee weapons (Sword, Axe, Mace, etc.)
+	actions["parry"] = DiceFace("Parry", "parries", "⚔️", BLOCK, 2);
+	actions["slash"] = DiceFace("Slash", "slashes", "⚔️", ATTACK, 2);
+	actions["thrust"] = DiceFace("Thrust", "thrusts", "🗡️", ATTACK, 2);
 
-	// === HEAL ACTIONS ===
-	actions["small-vial"] = DiceFace("Small Vial", "heals", "💖", HEAL, 1);
+	// Claw/Natural weapons (Goblin, Beast, Monster)
+	actions["scratch"] = DiceFace("Scratch", "scratches", "🪝", ATTACK, 1);
+	actions["swipe"] = DiceFace("Swipe", "swipes", "👐", ATTACK, 1, SPLASH);
+
+	// Ranged weapons (Archer, Ranger, etc.)
+	actions["aimed-shot"] = DiceFace("Aimed Shot", "shoots", "🎯", ATTACK, 2);
+	actions["quick-shot"] = DiceFace("Quick Shot", "shoots", "🏹", ATTACK, 1);
 
 	// === SPECIAL ACTIONS ===
 	actions["dodge"] = DiceFace("Dodge", "dodges", "💨", DODGE, 0);
-	actions["stun"] = DiceFace("Stun", "stuns", "💫", STUN, 0);
+	actions["headbutt"] = DiceFace("Headbutt", "headbutts", "💫", STUN, 0);
 	actions["empty"] = DiceFace("Empty", "No action", "❌", EMPTY, 0);
 
 	initialized = true;

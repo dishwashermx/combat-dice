@@ -16,17 +16,17 @@ Character CharacterFactory::createKnight() {
     return Character("Knight", 6, dice, "Hero");
 }
 
-Character CharacterFactory::createAssassin() {
+Character CharacterFactory::createTestBot() {
     std::vector<DiceFace> dice = {
-        ActionLibrary::getAction("unarmed-strike"),
-				ActionLibrary::getAction("unarmed-strike"),
-				ActionLibrary::getAction("unarmed-strike"),
-				ActionLibrary::getAction("unarmed-strike"),
-				ActionLibrary::getAction("unarmed-strike"),
-				ActionLibrary::getAction("unarmed-strike")
+        ActionLibrary::getAction("stun"),
+        ActionLibrary::getAction("stun"),
+        ActionLibrary::getAction("stun"),
+        ActionLibrary::getAction("stun"),
+        ActionLibrary::getAction("stun"),
+        ActionLibrary::getAction("stun")
     };
 
-    return Character("Assassin", 4, dice, "Hero");
+    return Character("Test Bot", 10, dice, "Hero");
 }
 
 // ===== MONSTERS =====
