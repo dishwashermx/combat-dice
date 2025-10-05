@@ -18,12 +18,12 @@ Character CharacterFactory::createKnight() {
 
 Character CharacterFactory::createAssassin() {
     std::vector<DiceFace> dice = {
-        ActionLibrary::getAction("dodge"),
-				ActionLibrary::getAction("dodge"),
-				ActionLibrary::getAction("dodge"),
-				ActionLibrary::getAction("dodge"),
-				ActionLibrary::getAction("dodge"),
-				ActionLibrary::getAction("dodge")
+        ActionLibrary::getAction("unarmed-strike"),
+				ActionLibrary::getAction("unarmed-strike"),
+				ActionLibrary::getAction("unarmed-strike"),
+				ActionLibrary::getAction("unarmed-strike"),
+				ActionLibrary::getAction("unarmed-strike"),
+				ActionLibrary::getAction("unarmed-strike")
     };
 
     return Character("Assassin", 4, dice, "Hero");

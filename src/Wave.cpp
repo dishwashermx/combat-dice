@@ -9,6 +9,10 @@ void Wave::setupWave() {
 		case 1:
 			game.monsters.push_back(CharacterFactory::createGoblin());
 			game.monsters.push_back(CharacterFactory::createGoblin());
+			game.monsters.push_back(CharacterFactory::createGoblin());
+			game.monsters.push_back(CharacterFactory::createGoblin());
+			game.monsters.push_back(CharacterFactory::createGoblin());
+			game.monsters.push_back(CharacterFactory::createGoblin());
 			break;
 		case 2:
 			game.monsters.push_back(CharacterFactory::createGoblin());
@@ -392,10 +396,40 @@ std::vector<CombatAction> Wave::monsterPhase() {
                         const auto& targetHero = game.heroes[targetIndex];
                         action = CombatAction(roll, game.monsters[i].getName(), i, -1, targetHero.getName(), targetIndex, 1);
 
-                        // For damage prediction - only if target is not dodging
-                        if (roll.action == ATTACK && !targetHero.isDodging()) {
-                            game.heroes[targetIndex].setIncomingDamage(
-                                targetHero.getIncomingDamage() + roll.value);
+                        // For damage prediction - calculate for all affected targets
+                        if (roll.action == ATTACK) {
+                            // Use the same targeting logic as executeAction to calculate damage
+                            if (roll.marks == SPLASH) {
+                                // Adjacent characters (target + neighbors)
+                                for (int offset = -1; offset <= 1; ++offset) {
+                                    int splashIndex = targetIndex + offset;
+                                    if (splashIndex >= 0 && splashIndex < static_cast<int>(game.heroes.size()) &&
+                                        game.heroes[splashIndex].isAlive() && !game.heroes[splashIndex].isDodging()) {
+                                        game.heroes[splashIndex].setIncomingDamage(
+                                            game.heroes[splashIndex].getIncomingDamage() + roll.value);
+                                    }
+                                }
+                            } else if (roll.marks == WAVE) {
+                                // WAVE - affects entire target team (all heroes)
+                                for (auto& hero : game.heroes) {
+                                    if (hero.isAlive() && !hero.isDodging()) {
+                                        hero.setIncomingDamage(hero.getIncomingDamage() + roll.value);
+                                    }
+                                }
+                            } else if (roll.marks == QUAKE) {
+                                // QUAKE - affects everyone alive (heroes and monsters)
+                                for (auto& hero : game.heroes) {
+                                    if (hero.isAlive() && !hero.isDodging()) {
+                                        hero.setIncomingDamage(hero.getIncomingDamage() + roll.value);
+                                    }
+                                }
+                            } else {
+                                // Single target only
+                                if (!targetHero.isDodging()) {
+                                    game.heroes[targetIndex].setIncomingDamage(
+                                        targetHero.getIncomingDamage() + roll.value);
+                                }
+                            }
                         }
                     } else {
                         action = CombatAction(roll, game.monsters[i].getName(), i, -1, "", -1, 0);

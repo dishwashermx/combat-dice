@@ -114,7 +114,7 @@ void Display::showActionResult(const CombatAction& action, const ActionResult& r
 		output += "for " + Colors::BOLD + actionValue + Colors::RESET;
 		std::cout << output;
 	}
- 
+
 	if (action.roll.action == ATTACK) {
 		std::string attackOutput = " damage!\n";
 		if (result.wasDodged) {
@@ -341,16 +341,14 @@ void Display::displayFaces(const std::vector<DiceFace>& faces) {
 				// Display the dice face with emoji and value
 				std::cout << color << "[";
 
-				if (face.marks != NO_MARK) {
-						std::cout << marksToEmoji(face.marks);
-						std::cout << " ";
-				}
+				std::cout << emoji << "  ";
 
-				std::cout << emoji << "  " << face.value;
+								if (face.marks != NO_MARK) {
+										std::cout << marksToEmoji(face.marks);
+										std::cout << " ";
+								}
 
-				// Add marks emoji if present
-
-				std::cout << "]" << Colors::RESET;
+				std::cout << face.value << "]" << Colors::RESET;
 
 				if (i < faces.size() - 1) {
 						std::cout << " ";
